@@ -15,8 +15,8 @@ def extract_sw(sw):
     align = num_alignment(query_align, target_aligh)
     identity = align / len(target_aligh)
     target_start , target_end = sw[2][1]
-    coverage = (target_end-target_start+1) / len(target_aligh)
-    return identity,coverage
+    align_length = (target_end-target_start+1)
+    return identity,align_length
 
 def identity_coverage(dna_query,protein_query,dna_target,protein_target):
     """
@@ -27,17 +27,18 @@ def identity_coverage(dna_query,protein_query,dna_target,protein_target):
        return "NO MATCH"
     """
     sw_dna = skbio.alignment.local_pairwise_align_ssw(DNA(dna_query),DNA(dna_target))
-    dna_identity,dna_coverage = extract_sw(sw_dna)
-    #print(dna_identity,dna_coverage)
+    dna_identity,align_length = extract_sw(sw_dna)
+    dna_coverage = align_length / len(dna_target)
 
     if dna_identity >= 0.95 and dna_coverage >= 0.95:
+
         return 'EXACT'
 
     else:
         sw_protein = skbio.alignment.local_pairwise_align_ssw\
             (Protein(protein_query),Protein(protein_target),substitution_matrix = blosum62 )
-        protein_identity,protein_coverage = extract_sw(sw_protein)
-        #print(protein_identity,protein_coverage)
+        protein_identity,align_length = extract_sw(sw_protein)
+        protein_coverage = align_length / len(protein_target)
         if protein_identity >= 0.8 and protein_coverage >= 0.8:
             return 'SIMILAR'
 

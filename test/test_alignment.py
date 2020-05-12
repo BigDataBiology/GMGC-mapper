@@ -1,25 +1,44 @@
 import pytest
 import sys
-import pandas as pd
-from Bio import SeqIO
 sys.path.append(r'../src')
-
 from alignment import identity_coverage
 
 
-def test_alignment():
-    besthits = pd.read_csv('../test_data/besthits.tsv',sep='\t')
-    dna_target = str(besthits[0:1]['dna'].values[0]).strip('\n')
-    protein_target = str(besthits[0:1]['protein'].values[0]).strip('\n')
-    for seq_record in SeqIO.parse('../test_data/genes_dna.fna', "fasta"):
-        dna_query = str(seq_record.seq).strip('\n')
-        break
+KNOWN_RESULTS=[
+    {
+    'query_nt': "ATGATGATGATGTGA"
+  , 'query_aa': "MMMM"
+  , 'target_nt': "ATGATGATGATGTGA"
+  , 'target_aa': "MMMM"
+  , 'result': "EXACT"
+    },
+    {
+        'query_nt': "ATGCATACTTATCACACCTACCATACCTAC"
+        , 'query_aa': "MHTYHTYHTY"
+        , 'target_nt': "ATGCACACTTACCATACGTATCATACATAC"
+        , 'target_aa': "MHTYHTYHTY"
+        , 'result': "SIMILAR"
+    },
+    {
+        'query_nt': "ATGCATACTTATCACACCTACCATACCTAC"
+        , 'query_aa': "MHTYHTYHTY"
+        , 'target_nt': "ATGCACTACCCCCATTATCACACGTAT"
+        , 'target_aa': "MHYPHYHTY"
+        , 'result': "MATCH"
+    },
+    {
+        'query_nt': "ATGCATACTTATCACACCTACCATACCTAC"
+        , 'query_aa': "MHTYHTYHTY"
+        , 'target_nt': "ATGGAACCTGAGCCAGAACCC"
+        , 'target_aa': "MEPEPEP"
+        , 'result': "NO MATCH"
+    }
+]
 
-    for seq_record in SeqIO.parse('../test_data/genes_protein.faa', "fasta"):
-        protein_query = str(seq_record.seq).strip('\n')
-        break
 
-    print(identity_coverage(dna_query,protein_query,dna_target,protein_target))
+@pytest.mark.parametrize("t", KNOWN_RESULTS)
+def test_alignment(t):
+        assert identity_coverage(t['query_nt'],t['query_aa'],t['target_nt'],t['target_aa']) == t['result']
 
 
 
