@@ -1,6 +1,6 @@
 import skbio.alignment
 from skbio.sequence import DNA,Protein
-from BLOSUM import blosum62
+from .BLOSUM import blosum62
 
 def num_alignment(query,target):
     num = 0
