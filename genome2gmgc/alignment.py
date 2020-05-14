@@ -1,6 +1,6 @@
 import skbio.alignment
 from skbio.sequence import DNA,Protein
-from .BLOSUM import blosum62
+from .BLOSUM import blosum62,blosum50
 
 def num_alignment(query,target):
     num = 0
@@ -26,7 +26,10 @@ def identity_coverage(dna_query,protein_query,dna_target,protein_target):
        if identity_coverage(query, protein_seq) >= (0.5, 0.5): return "MATCH"
        return "NO MATCH"
     """
-    sw_dna = skbio.alignment.local_pairwise_align_ssw(DNA(dna_query),DNA(dna_target))
+    try:
+        sw_dna = skbio.alignment.local_pairwise_align_ssw(DNA(dna_query),DNA(dna_target))
+    except:
+        sw_dna = skbio.alignment.local_pairwise_align_nucleotide(DNA(dna_query), DNA(dna_target))
     dna_identity,align_length = extract_sw(sw_dna)
     dna_coverage = align_length / len(dna_target)
 
@@ -35,8 +38,10 @@ def identity_coverage(dna_query,protein_query,dna_target,protein_target):
         return 'EXACT'
 
     else:
-        sw_protein = skbio.alignment.local_pairwise_align_ssw\
-            (Protein(protein_query),Protein(protein_target),substitution_matrix = blosum62 )
+        try:
+            sw_protein = skbio.alignment.local_pairwise_align_ssw(Protein(protein_query),Protein(protein_target),substitution_matrix = blosum62 )
+        except:
+            sw_protein = skbio.alignment.local_pairwise_align_protein(Protein(protein_query),Protein(protein_target),substitution_matrix = blosum62 )
         protein_identity,align_length = extract_sw(sw_protein)
         protein_coverage = align_length / len(protein_target)
         if protein_identity >= 0.8 and protein_coverage >= 0.8:
