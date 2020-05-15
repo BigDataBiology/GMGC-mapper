@@ -1,7 +1,8 @@
 from genome2gmgc.main import split_file
 from os import path
+import pytest
 
-def test_split_file(tmpdir):
+def test_split(tmpdir):
     faa_file = path.join(tmpdir, 'input.faa')
     fna_file = path.join(tmpdir, 'input.faa')
 
