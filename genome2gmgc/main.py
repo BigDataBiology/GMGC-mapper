@@ -55,7 +55,6 @@ def split_file(aa_path,dna_path,output_file):
             SeqIO.write(split_fasta_aa,output_file + '/protein_split_{}.fna'.format(index), 'fasta')
 
         if split_fasta_dna != []:
-            index += 1
             SeqIO.write(split_fasta_dna,output_file + '/dna_split_{}.fna'.format(index), 'fasta')
 
     return index
@@ -121,6 +120,7 @@ def main(args=None):
                            output_file=out+'/split_file')
     hit_table = []
     for index in range(num_split):
+        print(index)
         besthit = query_gmgc(out+'/split_file/protein_split_{}.fna'.format(index+1))
         hit_table_index = realignment(out+'/split_file/dna_split_{}.fna'.format(index+1),
                                       out+'/split_file/protein_split_{}.fna'.format(index+1),besthit)
