@@ -1,7 +1,5 @@
 import pytest
-import sys
-sys.path.append(r'../src')
-from alignment import identity_coverage
+from genome2gmgc.alignment import identity_coverage
 
 
 KNOWN_RESULTS=[
