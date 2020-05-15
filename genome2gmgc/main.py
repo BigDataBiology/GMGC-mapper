@@ -25,12 +25,12 @@ def gene_prediction(fasta_input,output):
               .format(fasta_input,output))
 
 
-def split_file(aa_path,dna_path,output_file):
+def split_file(aa_path, dna_path, output_file, max_size=50):
     if not os.path.exists(aa_path) or not os.path.exists(dna_path):
         raise Exception("Not exist the file!")
     records = list(SeqIO.parse(aa_path, "fasta"))
     index = 0
-    if len(records) > 50:
+    if len(records) > max_size:
         if not os.path.exists(output_file):
             os.makedirs(output_file)
         split_fasta_aa = []
@@ -43,7 +43,7 @@ def split_file(aa_path,dna_path,output_file):
             rec1 = SeqRecord(Seq(str(seq_record_dna.seq)), id=seq_record_dna.id, description='')
             split_fasta_dna.append(rec1)
             num_seq += 1
-            if num_seq == 50:
+            if num_seq == max_size:
                 num_seq = 0
                 index += 1
                 SeqIO.write(split_fasta_aa,output_file + '/protein_split_{}.fna'.format(index),'fasta')
@@ -64,10 +64,10 @@ def split_file(aa_path,dna_path,output_file):
 
 def query_gmgc(fasta_file):
     if not os.path.exists(fasta_file):
-        raise Exception("Not exist this protein file!")
+        raise Exception("Missing file '{}'".format(fasta_file))
 
     if len(list(SeqIO.parse(fasta_file, "fasta"))) == 0:
-        raise Exception("The file is empty!")
+        raise Exception("Input FASTA file '{}' file is empty!".format(fasta_file))
 
     besthit = subprocess.getstatusoutput('curl  -s -F \'mode=besthit\' -F \'return_seqs=0\' -F \'fasta=@{}\'  '
               '\'http://gmgc.embl.de/api/v1.0/query/sequence\''.format(fasta_file))[1]
