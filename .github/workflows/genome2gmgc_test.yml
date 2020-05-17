@@ -20,5 +20,5 @@ jobs:
         pip install scikit-bio
     - name: Test with pytest
       run: |
-        python -m pytest ../test/test_alignment.py
-        python -m pytest ../test/test_split.py
+        python -m pytest ./test/test_alignment.py
+        python -m pytest ./test/test_split.py
