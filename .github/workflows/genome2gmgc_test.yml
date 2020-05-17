@@ -1,6 +1,6 @@
 name: genome2gmgc_test
 
-on:[push]
+on: [push]
 
 jobs:
   build:
