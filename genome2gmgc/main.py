@@ -9,6 +9,7 @@ from .alignment import identity_coverage
 import pandas as pd
 import json
 import time
+from safeout import safeout
 from tqdm import tqdm
 
 def parse_args(args):
@@ -176,8 +177,9 @@ def main(args=None):
         summary.append(' -{0} ({1:.1%}) had no match in the GMGC'
                     .format(no_match, no_match/num_gene))
 
-    hit_table.to_csv(out+'/hit_table.tsv', sep='\t')
-    with open(out+'/summary.txt', 'wt') as ofile:
+    with safeout(out+'/hit_table.tsv', 'wb') as ofile:
+        hit_table.to_csv(ofile, sep='\t')
+    with safeout(out+'/summary.txt', 'wt') as ofile:
         for s in summary:
             print(s)
             ofile.write(s+'\n')
