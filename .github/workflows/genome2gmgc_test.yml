@@ -15,6 +15,7 @@ jobs:
         python-version: 3.7
     - name: Install dependencies
       run: |
+        pip install tqdm
         pip install pytest
         pip install biopython
         pip install scikit-bio
