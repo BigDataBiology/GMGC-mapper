@@ -17,7 +17,8 @@ setup(name='Genome2gmgc',
       packages=['genome2gmgc'],
       install_requires=[
           'Biopython',
-          'scikit-bio'
+          'scikit-bio',
+            'tqdm'
       ],
       include_package_data=True,
       zip_safe=False,
