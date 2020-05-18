@@ -21,9 +21,23 @@ def parse_args(args):
     return parser.parse_args()
 
 def gene_prediction(fasta_input,output):
+    import subprocess
+    from os import path
     print('Start gene prediction...')
-    os.system('prodigal -i {0} -o {1}/gene.coords.gbk -a {1}/protein_gene.faa -d {1}/dna_gene.faa -p meta'
-              .format(fasta_input,output))
+    subprocess.check_call(
+            ['prodigal',
+                '-i', fasta_input,
+                '-o', path.join(output, 'gene.coords.gbk'),
+                '-a', path.join(output, 'protein_gene.faa'),
+                '-d', path.join(output, 'dna_gene.faa')])
+
+            # For short inputs, prodigal will output the warning
+            #
+            # ```Warning:  ideally Prodigal should be given at least 100000 bases for training.
+            # You may get better results with the -p meta option.```
+            #
+            # Arguably, we could check this, but we default to the non `-p meta` call
+
     print('\nGene prediction done.\n')
 
 
