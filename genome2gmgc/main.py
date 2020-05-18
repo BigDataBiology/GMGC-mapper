@@ -9,6 +9,7 @@ from .alignment import identity_coverage
 import pandas as pd
 import json
 import time
+from safeout import safeout
 from tqdm import tqdm
 
 def parse_args(args):
@@ -21,9 +22,23 @@ def parse_args(args):
     return parser.parse_args()
 
 def gene_prediction(fasta_input,output):
+    import subprocess
+    from os import path
     print('Start gene prediction...')
-    os.system('prodigal -i {0} -o {1}/gene.coords.gbk -a {1}/protein_gene.faa -d {1}/dna_gene.faa -p meta'
-              .format(fasta_input,output))
+    subprocess.check_call(
+            ['prodigal',
+                '-i', fasta_input,
+                '-o', path.join(output, 'gene.coords.gbk'),
+                '-a', path.join(output, 'protein_gene.faa'),
+                '-d', path.join(output, 'dna_gene.faa')])
+
+            # For short inputs, prodigal will output the warning
+            #
+            # ```Warning:  ideally Prodigal should be given at least 100000 bases for training.
+            # You may get better results with the -p meta option.```
+            #
+            # Arguably, we could check this, but we default to the non `-p meta` call
+
     print('\nGene prediction done.\n')
 
 
@@ -104,7 +119,7 @@ def realignment(dna_path,aa_path,besthit):
                 hit_result.extend([query_name,hit_gene_id,realign_result,target_dna,target_aa])
                 results.append(hit_result)
         else:
-            hit_result.extend([query_name, None, 'No HIT', None, None])
+            hit_result.extend([query_name, None, 'NO HIT', None, None])
             results.append(hit_result)
     return results
 
@@ -121,7 +136,7 @@ def main(args=None):
     num_split = split_file(out+'/protein_gene.faa',out+'/dna_gene.faa',
                            output_file=out+'/split_file')
     hit_table = []
-    print('Start process {} batch ...'.format(num_split))
+    print('Starting GMGC queries (total: {} batches to process)'.format(num_split))
     for index in tqdm(range(num_split)):
         besthit = query_gmgc(out+'/split_file/protein_split_{}.fna'.format(index+1))
         if besthit is not None:
@@ -130,39 +145,45 @@ def main(args=None):
             hit_table_index = realignment(out+'/split_file/dna_split_{}.fna'.format(index+1),
                                           out+'/split_file/protein_split_{}.fna'.format(index+1),besthit)
             hit_table.extend(hit_table_index)
-    print('Process done!\n\n')
     hit_table = pd.DataFrame(hit_table)
     hit_table.columns = ['query_name','gene_id','align_category','gene_dna','gene_protein']
     num_gene = hit_table.shape[0]
 
 
-    print('*'*30+'Genome2gmgc results summary table'+'*'*30)
-    print('- Processed {} genes'.format(num_gene))
-    match_result = hit_table['align_category'].value_counts()
+    summary = []
+    summary.append('*'*30+'Genome2gmgc results summary table'+'*'*30)
+    summary.append('- Processed {} genes'.format(num_gene))
+    match_result = hit_table['align_category'].value_counts().to_dict()
     if 'EXACT' in match_result:
-        print(' -{0}({1}%) were found in the GMGC at above 95% nucleotide identity with 95% coverage'.format(match_result['EXACT'],int(match_result['EXACT'])*100/num_gene))
+        summary.append(' -{0} ({1:.1%%) were found in the GMGC at above 95% nucleotide identity with 95% coverage'
+                .format(match_result['EXACT'], match_result['EXACT']/num_gene))
     else:
-        print(' -No genes were found in the GMGC at above 95% nucleotide identity with 95% coverage')
+        summary.append(' -No genes were found in the GMGC at above 95% nucleotide identity with 95% coverage')
 
     if 'SIMILAR' in match_result:
-        print(' -{0}({1}%) were found in the GMGC at above 80% nucleotide identity with 80% coverage'.format(match_result['SIMILAR'],int(match_result['SIMILAR'])*100/num_gene))
+        summary.append(' -{0} ({1:.1%}) were found in the GMGC at above 80% nucleotide identity with 80% coverage'
+                .format(match_result['SIMILAR'], match_result['SIMILAR']/num_gene))
     else:
-        print(' -No genes were found in the GMGC at above 80% nucleotide identity with 80% coverage')
+        summary.append(' -No genes were found in the GMGC at above 80% nucleotide identity with 80% coverage')
 
     if 'MATCH' in match_result:
-        print(' -{0}({1}%) were found in the GMGC at above 50% nucleotide identity with 50% coverage'.format(match_result['MATCH'],int(match_result['MATCH'])*100/num_gene))
+        summary.append(' -{0} ({1:.1%}) were found in the GMGC at above 50% nucleotide identity with 50% coverage'
+                .format(match_result['MATCH'], match_result['MATCH']/num_gene))
     else:
-        print(' -No genes were found in the GMGC at above 50% nucleotide identity with 50% coverage')
+        summary.append(' -No genes were found in the GMGC at above 50% nucleotide identity with 50% coverage')
 
-    if 'NO MATCH' in match_result:
-        print(' -{0}({1}%) were found in the GMGC as NO MATCH'.format(match_result['NO MATCH'], int(match_result['NO MATCH']) * 100 / num_gene))
-    else:
-        print(' -No genes were found in the GMGC as NO MATCH')
+    no_match = match_result.get('NO MATCH', 0.0) + match_result.get('NO HIT', 0.0)
+    if no_match:
+        summary.append(' -{0} ({1:.1%}) had no match in the GMGC'
+                    .format(no_match, no_match/num_gene))
 
-    if 'No HIT' in match_result:
-        print(' -{0}({1}%) genes do not have hit in GMGC'.format(match_result['No HIT'], int(match_result['No HIT']) * 100 / num_gene))
+    with safeout(out+'/hit_table.tsv', 'wb') as ofile:
+        hit_table.to_csv(ofile, sep='\t')
+    with safeout(out+'/summary.txt', 'wt') as ofile:
+        for s in summary:
+            print(s)
+            ofile.write(s+'\n')
 
-    hit_table.to_csv(out+'/hit_table.tsv',sep='\t')
 
 
 
