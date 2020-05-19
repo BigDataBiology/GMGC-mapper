@@ -1,9 +1,10 @@
 from setuptools import setup
 
-from setuptools import setup
+exec(compile(open('genome2gmgc/genome2gmgc_version.py').read(),
+             'genome2gmgc/genome2gmgc_version.py', 'exec'))
 
 setup(name='Genome2gmgc',
-      version='0.1',
+      version=__version__,
       description='map genome to gmgc',
       long_description='',
       classifiers=[

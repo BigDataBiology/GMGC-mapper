@@ -5,12 +5,14 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 import os
 import requests
-from .alignment import identity_coverage
 import pandas as pd
 import json
 import time
 from safeout import safeout
 from tqdm import tqdm
+
+from .alignment import identity_coverage
+from .genome2gmgc_version import __version__
 
 def parse_args(args):
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -177,8 +179,9 @@ def main(args=None):
         summary.append(' -{0} ({1:.1%}) had no match in the GMGC'
                     .format(no_match, no_match/num_gene))
 
-    with safeout(out+'/hit_table.tsv', 'wb') as ofile:
-        hit_table.to_csv(ofile, sep='\t')
+    with safeout(out+'/hit_table.tsv', 'wt') as ofile:
+        ofile.write('# Results from Genome2gmgc v{}\n'.format(__version__))
+        hit_table.to_csv(ofile, sep='\t', index=False)
     with safeout(out+'/summary.txt', 'wt') as ofile:
         for s in summary:
             print(s)
