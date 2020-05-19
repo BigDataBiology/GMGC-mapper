@@ -161,7 +161,7 @@ def main(args=None):
     summary.append('- Processed {} genes'.format(num_gene))
     match_result = hit_table['align_category'].value_counts().to_dict()
     if 'EXACT' in match_result:
-        summary.append(' -{0} ({1:.1%%) were found in the GMGC at above 95% nucleotide identity with 95% coverage'
+        summary.append(' -{0} ({1:.1%}) were found in the GMGC at above 95% nucleotide identity with 95% coverage'
                 .format(match_result['EXACT'], match_result['EXACT']/num_gene))
     else:
         summary.append(' -No genes were found in the GMGC at above 95% nucleotide identity with 95% coverage')
