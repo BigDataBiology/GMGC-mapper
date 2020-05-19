@@ -19,7 +19,10 @@ def parse_args(args):
                                      description='Genome2gmgc')
     parser.add_argument('-i', '--input',required=True,help = 'path to the input genome FASTA file.',dest='genome_fasta',
                         default = None)
-    parser.add_argument('-o', '--output',required=True,help = 'path to the output file.',dest='output',
+    parser.add_argument('-o', '--output',
+                        required=True,
+                        help='Output directory (will be created if non-existent)',
+                        dest='output',
                         default = None)
     return parser.parse_args()
 
@@ -31,8 +34,8 @@ def gene_prediction(fasta_input,output):
             ['prodigal',
                 '-i', fasta_input,
                 '-o', path.join(output, 'gene.coords.gbk'),
-                '-a', path.join(output, 'protein_gene.faa'),
-                '-d', path.join(output, 'dna_gene.faa')])
+                '-a', path.join(output, 'prodigal_out.faa'),
+                '-d', path.join(output, 'prodigal_out.fna')])
 
             # For short inputs, prodigal will output the warning
             #
@@ -44,14 +47,14 @@ def gene_prediction(fasta_input,output):
     print('\nGene prediction done.\n')
 
 
-def split_file(aa_path, dna_path, output_file, max_size=50):
+def split_file(aa_path, dna_path, output_dir, max_size=50):
     if not os.path.exists(aa_path) or not os.path.exists(dna_path):
         raise Exception("Not exist the file!")
     records = list(SeqIO.parse(aa_path, "fasta"))
     index = 0
     if len(records) > max_size:
-        if not os.path.exists(output_file):
-            os.makedirs(output_file)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
         split_fasta_aa = []
         split_fasta_dna = []
         num_seq = 0
@@ -65,16 +68,16 @@ def split_file(aa_path, dna_path, output_file, max_size=50):
             if num_seq == max_size:
                 num_seq = 0
                 index += 1
-                SeqIO.write(split_fasta_aa,output_file + '/protein_split_{}.fna'.format(index),'fasta')
-                SeqIO.write(split_fasta_dna, output_file + '/dna_split_{}.fna'.format(index), 'fasta')
+                SeqIO.write(split_fasta_aa,  output_dir + '/split_{}.faa'.format(index), 'fasta')
+                SeqIO.write(split_fasta_dna, output_dir + '/split_{}.fna'.format(index), 'fasta')
                 split_fasta_aa = []
                 split_fasta_dna = []
         if split_fasta_aa != []:
             index += 1
-            SeqIO.write(split_fasta_aa,output_file + '/protein_split_{}.fna'.format(index), 'fasta')
+            SeqIO.write(split_fasta_aa, output_dir + '/split_{}.faa'.format(index), 'fasta')
 
         if split_fasta_dna != []:
-            SeqIO.write(split_fasta_dna,output_file + '/dna_split_{}.fna'.format(index), 'fasta')
+            SeqIO.write(split_fasta_dna, output_dir + '/split_{}.fna'.format(index), 'fasta')
 
     return index
 
@@ -135,17 +138,18 @@ def main(args=None):
     if not os.path.exists(out):
         os.makedirs(out)
     gene_prediction(args.genome_fasta,out)
-    num_split = split_file(out+'/protein_gene.faa',out+'/dna_gene.faa',
-                           output_file=out+'/split_file')
+    num_split = split_file(out+'/prodigal_out.faa',
+                           out+'/prodigal_out.fna',
+                           output_dir=out+'/split_file')
     hit_table = []
     print('Starting GMGC queries (total: {} batches to process)'.format(num_split))
     for index in tqdm(range(num_split)):
-        besthit = query_gmgc(out+'/split_file/protein_split_{}.fna'.format(index+1))
+        besthit = query_gmgc(out+'/split_file/split_{}.faa'.format(index+1))
         if besthit is not None:
             besthit = json.loads(bytes.decode(besthit.content))['results']
 
-            hit_table_index = realignment(out+'/split_file/dna_split_{}.fna'.format(index+1),
-                                          out+'/split_file/protein_split_{}.fna'.format(index+1),besthit)
+            hit_table_index = realignment(out+'/split_file/split_{}.fna'.format(index+1),
+                                          out+'/split_file/split_{}.faa'.format(index+1),besthit)
             hit_table.extend(hit_table_index)
     hit_table = pd.DataFrame(hit_table)
     hit_table.columns = ['query_name','gene_id','align_category','gene_dna','gene_protein']
