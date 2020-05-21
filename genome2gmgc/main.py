@@ -161,22 +161,22 @@ def main(args=None):
     summary.append('- Processed {} genes'.format(num_gene))
     match_result = hit_table['align_category'].value_counts().to_dict()
     if 'EXACT' in match_result:
-        summary.append(' -{0} ({1:.1%}) were found in the GMGC at above 95% nucleotide identity with 95% coverage'
+        summary.append(' -{0} ({1:.1%}) were found in the GMGC at above 95% nucleotide identity with at least 95% coverage'
                 .format(match_result['EXACT'], match_result['EXACT']/num_gene))
     else:
-        summary.append(' -No genes were found in the GMGC at above 95% nucleotide identity with 95% coverage')
+        summary.append(' -No genes were found in the GMGC at above 95% nucleotide identity with at least 95% coverage')
 
     if 'SIMILAR' in match_result:
-        summary.append(' -{0} ({1:.1%}) were found in the GMGC at above 80% nucleotide identity with 80% coverage'
+        summary.append(' -{0} ({1:.1%}) were found in the GMGC at above 80% nucleotide identity with at least 80% coverage'
                 .format(match_result['SIMILAR'], match_result['SIMILAR']/num_gene))
     else:
-        summary.append(' -No genes were found in the GMGC at above 80% nucleotide identity with 80% coverage')
+        summary.append(' -No genes were found in the GMGC at above 80% nucleotide identity with at least 80% coverage')
 
     if 'MATCH' in match_result:
-        summary.append(' -{0} ({1:.1%}) were found in the GMGC at above 50% nucleotide identity with 50% coverage'
+        summary.append(' -{0} ({1:.1%}) were found in the GMGC at above 50% nucleotide identity with at least 50% coverage'
                 .format(match_result['MATCH'], match_result['MATCH']/num_gene))
     else:
-        summary.append(' -No genes were found in the GMGC at above 50% nucleotide identity with 50% coverage')
+        summary.append(' -No genes were found in the GMGC at above 50% nucleotide identity with at least 50% coverage')
 
     no_match = match_result.get('NO MATCH', 0.0) + match_result.get('NO HIT', 0.0)
     if no_match:
