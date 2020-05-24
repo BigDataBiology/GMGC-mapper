@@ -14,10 +14,14 @@ def test_split(tmpdir):
                 out_n.write(f'>g{i}\nATGTTC\n')
 
     odir = path.join(tmpdir, 'output')
-    assert split_file(faa_file, fna_file, odir, 1) == 6
-    assert split_file(faa_file, fna_file, odir, 2) == 3
-    assert split_file(faa_file, fna_file, odir, 3) == 2
-    assert split_file(faa_file, fna_file, odir, 4) == 2
+    assert split_file(faa_file, odir, is_dna=False ,max_size=1) == 6
+    assert split_file(fna_file, odir, is_dna=True, max_size=1) == 6
+    assert split_file(faa_file, odir, is_dna=False, max_size=2) == 3
+    assert split_file(fna_file, odir, is_dna=True, max_size=2) == 3
+    assert split_file(faa_file, odir, is_dna=False, max_size=3) == 2
+    assert split_file(fna_file, odir, is_dna=True, max_size=3) == 2
+    assert split_file(faa_file, odir, is_dna=False, max_size=6) == 1
+    assert split_file(fna_file, odir, is_dna=True, max_size=6) == 1
 
 
 def test_split(tmpdir):
@@ -33,9 +37,10 @@ def test_split(tmpdir):
                 out_a.write(f'>g{i}\nMEPTAP\n')
                 out_n.write(f'>g{i}\nATGTTC\n')
 
-        
+
     odir = path.join(tmpdir, 'output')
-    n = split_file(faa_file, fna_file, odir, 11)
+    n = split_file(faa_file, odir, is_dna= False, max_size=11)
+    n = split_file(fna_file, odir, is_dna= True, max_size=11)
     total_nt = 0
     total_aa =0
     for it in range(n):

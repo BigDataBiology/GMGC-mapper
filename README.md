@@ -18,21 +18,25 @@ python setup.py install
 
 ## Parameters
 
--i/--input : path to the input genome file(fasta/gz/bz2).
+-i/--input : path to the input genome file(.fasta/.gz/.bz2).
 
 -o/--output : Output directory (will be created if non-existent).
 
--nt_input : path to the input DNA gene file(fasta/gz/bz2).
+-nt_input : path to the input DNA gene file(.fasta/.gz/.bz2).
 
--aa_input : path to the input Protein gene file(fasta/gz/bz2).
+-aa_input : path to the input Protein gene file(.fasta/.gz/.bz2).
 
 The input must contain a genome file or both DNA and Protein gene file.
 
 ## Examples
 
+```bash
 genome2gmgc -i input.fasta -o output
+```
 
+```bash
 genome2gmgc -nt_input genes.fna -aa_input genes.faa -o output
+```
 
 ## Output
 

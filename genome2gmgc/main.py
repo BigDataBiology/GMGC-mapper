@@ -60,12 +60,12 @@ def gene_prediction(fasta_input,output):
 
     print('\nGene prediction done.\n')
 
-def split_file(gene_path,output_dir,is_dna=True,max_size = 50):
+def split_file(gene_path,output_dir,is_dna,max_size = 50):
     def split(handle):
         split_fasta = []
         records = list(SeqIO.parse(handle, "fasta"))
         index = 0
-        if len(records) > max_size:
+        if len(records) >= max_size:
             num_seq = 0
             for seq_record in records:
                 rec1 = SeqRecord(Seq(str(seq_record.seq)), id=seq_record.id, description='')
