@@ -15,6 +15,8 @@ import bz2
 from .alignment import identity_coverage
 from .genome2gmgc_version import __version__
 
+import tempfile
+
 def parse_args(args):
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                                      description='Genome2gmgc')
@@ -167,7 +169,20 @@ def gene_num(gene):
     return len(list(SeqIO.parse(gene, "fasta")))
 
 
-
+def query_genome_bin(hit_table):
+    hit_gene_id = hit_table['gene_id'].tolist()
+    genome_bin_dict = {}
+    for gene_id in hit_gene_id:
+        genome_bin = requests.get('http://gmgc.embl.de/api/v1.0/unigene/{}/genome_bins'.format(gene_id))
+        genome_bin = json.loads(bytes.decode(genome_bin.content))['genome_bins']
+        for bin in genome_bin:
+            if bin not in genome_bin_dict:
+                genome_bin_dict[bin] = 1
+            else:
+                genome_bin_dict[bin] += 1
+    genome_bin = pd.DataFrame.from_dict(genome_bin_dict,orient='index',columns=['times_gene_hit'])
+    genome_bin = genome_bin.reset_index().rename(columns={'index':'genome_bin'})
+    return genome_bin
 
 def main(args=None):
     if args is None:
@@ -178,69 +193,88 @@ def main(args=None):
     if not os.path.exists(out):
         os.makedirs(out)
 
-    if args.nt_input is None or args.aa_input is None:
-        if args.genome_fasta is None:
-            raise Exception("Need to input both dna and protein gene file or a genome file!")
-        gene_prediction(args.genome_fasta,out)
-        split_file(out + '/prodigal_out.faa',
-                               output_dir=out + '/split_file',is_dna=False)
-        num_split = split_file(out + '/prodigal_out.fna',
-                               output_dir=out + '/split_file',is_dna=True)
-    else:
-        assert gene_num(args.nt_input) == gene_num(args.aa_input), "Input dna and protein gene file must have the same sequence number."
-        split_file(args.aa_input,
-                               output_dir=out + '/split_file',is_dna=False)
-        num_split = split_file(args.nt_input,
-                               output_dir=out + '/split_file',is_dna=True)
-    hit_table = []
-    print('Starting GMGC queries (total: {} batches to process)'.format(num_split))
-    for index in tqdm(range(num_split)):
-        besthit = query_gmgc(out+'/split_file/split_{}.faa'.format(index+1))
-        if besthit is not None:
-            besthit = json.loads(bytes.decode(besthit.content))['results']
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        print(tmpdirname)
+        if args.nt_input is None or args.aa_input is None:
+            if args.genome_fasta is None:
+                raise Exception("Need to input both dna and protein gene file or a genome file!")
+            gene_prediction(args.genome_fasta,out)
 
-            hit_table_index = realignment(out+'/split_file/split_{}.fna'.format(index+1),
-                                          out+'/split_file/split_{}.faa'.format(index+1),besthit)
-            hit_table.extend(hit_table_index)
-    hit_table = pd.DataFrame(hit_table)
-    hit_table.columns = ['query_name','gene_id','align_category','gene_dna','gene_protein']
-    num_gene = hit_table.shape[0]
+            split_file(out + '/prodigal_out.faa',
+                                   output_dir=tmpdirname + '/split_file',is_dna=False)
+            num_split = split_file(out + '/prodigal_out.fna',
+                                   output_dir=tmpdirname + '/split_file',is_dna=True)
+        else:
+            assert gene_num(args.nt_input) == gene_num(args.aa_input), "Input dna and protein gene file must have the same sequence number."
+            split_file(args.aa_input,
+                                   output_dir=tmpdirname + '/split_file',is_dna=False)
+            num_split = split_file(args.nt_input,
+                                   output_dir=tmpdirname + '/split_file',is_dna=True)
+        hit_table = []
+        print('Starting GMGC queries (total: {} batches to process)'.format(num_split))
+        for index in tqdm(range(num_split)):
+            besthit = query_gmgc(tmpdirname+'/split_file/split_{}.faa'.format(index+1))
+            if besthit is not None:
+                besthit = json.loads(bytes.decode(besthit.content))['results']
+                hit_table_index = realignment(tmpdirname+'/split_file/split_{}.fna'.format(index+1),
+                                              tmpdirname+'/split_file/split_{}.faa'.format(index+1),besthit)
+                hit_table.extend(hit_table_index)
+        hit_table = pd.DataFrame(hit_table)
+        hit_table.columns = ['query_name','gene_id','align_category','gene_dna','gene_protein']
+        num_gene = hit_table.shape[0]
 
 
-    summary = []
-    summary.append('*'*30+'Genome2gmgc results summary table'+'*'*30)
-    summary.append('- Processed {} genes'.format(num_gene))
-    match_result = hit_table['align_category'].value_counts().to_dict()
-    if 'EXACT' in match_result:
-        summary.append(' -{0} ({1:.1%}) were found in the GMGC at above 95% nucleotide identity with at least 95% coverage'
-                .format(match_result['EXACT'], match_result['EXACT']/num_gene))
-    else:
-        summary.append(' -No genes were found in the GMGC at above 95% nucleotide identity with at least 95% coverage')
+        summary = []
+        summary.append('*'*30+'Genome2gmgc results summary table'+'*'*30)
+        summary.append('- Processed {} genes'.format(num_gene))
+        match_result = hit_table['align_category'].value_counts().to_dict()
+        if 'EXACT' in match_result:
+            summary.append(' -{0} ({1:.1%}) were found in the GMGC at above 95% nucleotide identity with at least 95% coverage'
+                    .format(match_result['EXACT'], match_result['EXACT']/num_gene))
+        else:
+            summary.append(' -No genes were found in the GMGC at above 95% nucleotide identity with at least 95% coverage')
 
-    if 'SIMILAR' in match_result:
-        summary.append(' -{0} ({1:.1%}) were found in the GMGC at above 80% nucleotide identity with at least 80% coverage'
-                .format(match_result['SIMILAR'], match_result['SIMILAR']/num_gene))
-    else:
-        summary.append(' -No genes were found in the GMGC at above 80% nucleotide identity with at least 80% coverage')
+        if 'SIMILAR' in match_result:
+            summary.append(' -{0} ({1:.1%}) were found in the GMGC at above 80% nucleotide identity with at least 80% coverage'
+                    .format(match_result['SIMILAR'], match_result['SIMILAR']/num_gene))
+        else:
+            summary.append(' -No genes were found in the GMGC at above 80% nucleotide identity with at least 80% coverage')
 
-    if 'MATCH' in match_result:
-        summary.append(' -{0} ({1:.1%}) were found in the GMGC at above 50% nucleotide identity with at least 50% coverage'
-                .format(match_result['MATCH'], match_result['MATCH']/num_gene))
-    else:
-        summary.append(' -No genes were found in the GMGC at above 50% nucleotide identity with at least 50% coverage')
+        if 'MATCH' in match_result:
+            summary.append(' -{0} ({1:.1%}) were found in the GMGC at above 50% nucleotide identity with at least 50% coverage'
+                    .format(match_result['MATCH'], match_result['MATCH']/num_gene))
+        else:
+            summary.append(' -No genes were found in the GMGC at above 50% nucleotide identity with at least 50% coverage')
 
-    no_match = match_result.get('NO MATCH', 0.0) + match_result.get('NO HIT', 0.0)
-    if no_match:
-        summary.append(' -{0} ({1:.1%}) had no match in the GMGC'
-                    .format(no_match, no_match/num_gene))
+        no_match = match_result.get('NO MATCH', 0.0) + match_result.get('NO HIT', 0.0)
+        if no_match:
+            summary.append(' -{0} ({1:.1%}) had no match in the GMGC'
+                        .format(no_match, no_match/num_gene))
 
-    with safeout(out+'/hit_table.tsv', 'wt') as ofile:
-        ofile.write('# Results from Genome2gmgc v{}\n'.format(__version__))
-        hit_table.to_csv(ofile, sep='\t', index=False)
-    with safeout(out+'/summary.txt', 'wt') as ofile:
-        for s in summary:
-            print(s)
-            ofile.write(s+'\n')
+        genome_bin = query_genome_bin(hit_table)
+        summary.append('\n\n'+'*' * 30 + 'Genome2gmgc results genome_bin table' + '*' * 30+'\n\n')
+        summary.append(' '*36+ 'genome bin'+' '*6+'times a gene hitting it')
+        for row in genome_bin.itertuples():
+            bin = getattr(row,'genome_bin')
+            number = getattr(row, 'times_gene_hit')
+            summary.append(' '*35 +str(bin)+' '*10+str(number))
+
+        with safeout(out+'/genome_bin.tsv', 'wt') as ofile:
+            ofile.write('# Genome_bin from Genome2gmgc v{}\n'.format(__version__))
+            genome_bin.to_csv(ofile, sep='\t', index=False)
+
+        with safeout(out+'/hit_table.tsv', 'wt') as ofile:
+            ofile.write('# Results from Genome2gmgc v{}\n'.format(__version__))
+            hit_table.to_csv(ofile, sep='\t', index=False)
+
+        with safeout(out+'/summary.txt', 'wt') as ofile:
+            for s in summary:
+                print(s)
+                ofile.write(s+'\n')
+
+
+
+
 
 
 
