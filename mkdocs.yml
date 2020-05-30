@@ -1,1 +1,5 @@
-site_name: My Docs
+site_name: Genome2gmgc
+repo_url: "https://github.com/psj1997/Genome2gmgc"
+
+nav:
+  - 'Genome2gmgc' index.md
