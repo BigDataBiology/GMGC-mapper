@@ -3,3 +3,5 @@ repo_url: "https://github.com/psj1997/Genome2gmgc"
 
 nav:
   - 'Genome2gmgc' index.md
+  - 'Install' install.md
+  - 'Usage' usage.md
