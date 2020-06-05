@@ -1,6 +1,6 @@
-# Genome2gmgc
+# GMGC-Finder
 
-Genome2gmgc is a command line tool to query input genome to GMGC projec . It will return the summary of  alignment categories and genome bins. 
+GMGC-Finder is a command line tool to query input genome to GMGC projec . It will return the summary of  alignment categories and genome bins. 
 
 ## Commands
 

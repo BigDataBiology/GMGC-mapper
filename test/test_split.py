@@ -1,4 +1,4 @@
-from genome2gmgc.main import split_file
+from gmgc_finder.main import split_file
 from os import path
 import pytest
 

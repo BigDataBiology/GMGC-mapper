@@ -17,13 +17,13 @@ The input must contain a genome file or both DNA and Protein gene file.
 Input is genome sequence.
 
 ```bash
-genome2gmgc -i input.fasta -o output
+gmgc-finder -i input.fasta -o output
 ```
 
 Input is DNA/protein gene sequence.
 
 ```bash
-genome2gmgc -nt_input genes.fna -aa_input genes.faa -o output
+gmgc-finder -nt_input genes.fna -aa_input genes.faa -o output
 ```
 
 If input is metagenome , you can use [NGLess](https://github.com/ngless-toolkit/ngless) for assemble and gene prediction.

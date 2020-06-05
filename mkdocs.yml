@@ -1,7 +1,7 @@
-site_name: "Genome2gmgc"
-repo_url: "https://github.com/psj1997/Genome2gmgc"
+site_name: "GMGC-Finder"
+repo_url: "https://github.com/psj1997/GMGC-Finder"
 
 nav:
-        - 'Genome2gmgc': index.md
+        - 'GMGC-Finder': index.md
         - 'Install': install.md
         - 'Usage': usage.md

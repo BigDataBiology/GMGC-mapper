@@ -1,6 +1,6 @@
 # Install
 
-Genome2gmgc requires [prodigal](https://github.com/hyattpd/Prodigal).You need to install prodigal first and add it into your system path.
+GMGC-Finder requires [prodigal](https://github.com/hyattpd/Prodigal).You need to install prodigal first and add it into your system path.
 
 Install from source
 

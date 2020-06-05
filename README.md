@@ -1,4 +1,4 @@
-# Genome2gmgc
+# GMGC-Finder
 
 Command line tool to query input genome to GMGC project. 
 
@@ -6,7 +6,7 @@ Command line tool to query input genome to GMGC project.
 
 ## Install
 
-Genome2gmgc requires [prodigal](https://github.com/hyattpd/Prodigal)
+GMGC-Finder requires [prodigal](https://github.com/hyattpd/Prodigal)
 
 Install from source
 
@@ -33,13 +33,13 @@ The input must contain a genome file or both DNA and Protein gene file.
 Input is genome sequence.
 
 ```bash
-genome2gmgc -i input.fasta -o output
+gmgc-finder -i input.fasta -o output
 ```
 
 Input is DNA/protein gene sequence.
 
 ```bash
-genome2gmgc -nt_input genes.fna -aa_input genes.faa -o output
+gmgc-finder -nt_input genes.fna -aa_input genes.faa -o output
 ```
 
 If input is metagenome , you can use [NGLess](https://github.com/ngless-toolkit/ngless) for assemble and gene prediction. For more details , you can [read the docs](https://genome2gmgc.readthedocs.io/en/latest/usage/).

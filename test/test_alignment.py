@@ -1,5 +1,5 @@
 import pytest
-from genome2gmgc.alignment import identity_coverage
+from gmgc_finder.alignment import identity_coverage
 
 
 KNOWN_RESULTS=[

@@ -1,4 +1,4 @@
-name: genome2gmgc_test
+name: gmgc_finder_test
 
 on: [push]
 
