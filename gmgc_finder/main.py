@@ -87,6 +87,15 @@ def split_file(gene_path,output_dir,is_dna,max_size = 50):
                     SeqIO.write(split_fasta, output_dir + '/split_{}.fna'.format(index), 'fasta')
                 else:
                     SeqIO.write(split_fasta, output_dir + '/split_{}.faa'.format(index), 'fasta')
+        else:
+            index += 1
+            for seq_record in records:
+                rec1 = SeqRecord(Seq(str(seq_record.seq)), id=seq_record.id, description='')
+                split_fasta.append(rec1)
+            if is_dna is True:
+                SeqIO.write(split_fasta, output_dir + '/split_{}.fna'.format(index), 'fasta')
+            else:
+                SeqIO.write(split_fasta, output_dir + '/split_{}.faa'.format(index), 'fasta')
         return index
 
     if not os.path.exists(gene_path):
