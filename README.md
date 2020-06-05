@@ -42,7 +42,7 @@ Input is DNA/protein gene sequence.
 gmgc-finder -nt_input genes.fna -aa_input genes.faa -o output
 ```
 
-If input is metagenome , you can use [NGLess](https://github.com/ngless-toolkit/ngless) for assemble and gene prediction. For more details , you can [read the docs](https://genome2gmgc.readthedocs.io/en/latest/usage/).
+If input is metagenome , you can use [NGLess](https://github.com/ngless-toolkit/ngless) for assemble and gene prediction. For more details , you can [read the docs](https://gmgc-finder.readthedocs.io/en/latest/usage/).
 
 ## Output
 
