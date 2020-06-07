@@ -46,7 +46,7 @@ If input is metagenome , you can use [NGLess](https://github.com/ngless-toolkit/
 
 ## Output
 
-The output folder contains :
+The output folder contains（for more details , you can [read the docs](https://genome2gmgc.readthedocs.io/en/latest/output/)） :
 
 (1) prodigal_out.faa , prodigal_out.fna , gene.coords.gbk :  output of prodigal.  .faa file means protein sequence predicted by prodigal and .fna file means nucleotide sequence predicted by prodigal.
 
