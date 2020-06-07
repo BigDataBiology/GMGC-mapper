@@ -22,7 +22,7 @@ The output folder contains :
 
 (2) hit_table.tsv : results of the query. There are five columns in the file: query_name,gene_id,align_category,gene_dna,gene_protein.
 
-(3) genome_bin.tsv : results of times of a genome bin that genes hitting it.
+(3) genome_bin.tsv : times of a genome bin that input genes hitting it
 
 (4) summary.txt : Summary of the query.
 

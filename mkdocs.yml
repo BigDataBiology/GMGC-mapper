@@ -5,3 +5,4 @@ nav:
         - 'GMGC-Finder': index.md
         - 'Install': install.md
         - 'Usage': usage.md
+        - 'Output' : output.md
