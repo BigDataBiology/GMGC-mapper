@@ -2,8 +2,6 @@
 
 Command line tool to query input genome to GMGC project. 
 
-
-
 ## Install
 
 GMGC-Finder requires [prodigal](https://github.com/hyattpd/Prodigal)
@@ -14,19 +12,17 @@ Install from source
 python setup.py install
 ```
 
-
-
 ## Parameters
 
-* `-i/--input` : path to the input genome file(.fasta/.gz/.bz2).
+* `-i/--input`: path to the input genome file(.fasta/.gz/.bz2).
 
-* `-o/--output` : Output directory (will be created if non-existent).
+* `-o/--output`: Output directory (will be created if non-existent).
 
-* `-nt_input` : path to the input DNA gene file(.fasta/.gz/.bz2).
+* `-nt_input`: path to the input DNA gene file(.fasta/.gz/.bz2).
 
-* `-aa_input` : path to the input Protein gene file(.fasta/.gz/.bz2).
+* `-aa_input`: path to the input Protein gene file(.fasta/.gz/.bz2).
 
-The input must contain a genome file or both DNA and Protein gene file.
+The input must contain a genome file or both DNA and Protein gene files.
 
 ## Examples
 
@@ -42,29 +38,20 @@ Input is DNA/protein gene sequence.
 gmgc-finder -nt_input genes.fna -aa_input genes.faa -o output
 ```
 
-If input is metagenome , you can use [NGLess](https://github.com/ngless-toolkit/ngless) for assemble and gene prediction. For more details , you can [read the docs](https://gmgc-finder.readthedocs.io/en/latest/usage/).
+If yout input is a metagenome, you can use
+[NGLess](https://github.com/ngless-toolkit/ngless) for assembly and gene
+prediction. For more details, [read the
+docs](https://gmgc-finder.readthedocs.io/en/latest/usage/).
 
 ## Output
 
-The output folder contains（for more details , you can [read the docs](https://genome2gmgc.readthedocs.io/en/latest/output/)） :
+The output folder will contain
 
-(1) prodigal_out.faa , prodigal_out.fna , gene.coords.gbk :  output of prodigal.  .faa file means protein sequence predicted by prodigal and .fna file means nucleotide sequence predicted by prodigal.
+1. Outputs of gene prediction (prodigal).
+2. Complete data table, listing all the hits in GMGC, per gene.
+3. Complete table, listing all the genome bins (MAGs) that are found in the results.
+4. Human readable summary.
 
-(2) hit_table.tsv : results of the query. There are five columns in the file: query_name,gene_id,align_category,gene_dna,gene_protein.
-
-(3) genome_bin.tsv : times of a genome bin that input genes hitting it。
-
-(4) summary.txt : Summary of the query.
-
-
-
-## Align_category
-
-* EXACT : above 95% nucleotide identity with at least 95% coverage
-
-* SIMILAR : above 80% nucleotide identity with at least 80% coverage
-
-* MATCH : above 50% nucleotide identity with at least 50% coverage
-
-* NO MATCH : no match in GMGC
-
+For more details, [read the
+docs](https://genome2gmgc.readthedocs.io/en/latest/output/). A description of
+the outputs is also written to output folder for convenience.
