@@ -2,8 +2,7 @@
 
 Explanation of the files in the output
 
-
-## prodigal\_out.faa , prodigal\_out.fna , gene.coords.gbk
+## Prodigal output
 
 These three files are the output prodigal.
 
@@ -12,17 +11,17 @@ These three files are the output prodigal.
 - `gene.coords.gbk` gene information in Genebank format
 
 
-## hit\_table.tsv :
+## Hit Table (`hit_table.tsv`)
 
 The results of the queries to the GMGC.
 
 There are five columns in the file.
 
 - `query_name`: the name/id of the input genome contig
-- `gene_id`: the gener\_id with the best score in GMGC
+- `gene_id`: the Unigene with the best score in GMGC
 - `align_category: there are four different classes of alignment (see below)
-- `gene\_dna`: the DNA sequence of the best hit in GMGC
-- `gene\_protein`: the protein sequence of the best hit in GMGC
+- `gene_dna`: the DNA sequence of the best hit in GMGC
+- `gene_protein`: the protein sequence of the best hit in GMGC
 
 ### Alignment category
 
@@ -35,21 +34,21 @@ There are five columns in the file.
 - `NO MATCH`: no match in GMGC.
 
 
-## `genome\_bin.tsv`
+## Genome bins (`genome_bin.tsv`)
 
 Genome bins (MAGs) found in the results (and a count of how often many genes
 are contained in them).
 
 There are two columns in the file.
 
-- `genome\_bin`: the name of genome bins in GMGC
-- `times\_gene\_hit`: the times of input genes hitting it 
+- `genome_bin`: the name of genome bins in GMGC
+- `times_gene_hit`: the times of input genes hitting it 
 
 Note that GMGC unigenes can while not all GMGC unigenes are contained in a
 genome bin, some are contained in many. Thus, the total counts will not (except
 by coincidence) correspond to the number of genes queried.
 
-## summary.txt
+## Summary (`summary.txt`)
 
 Human-readable summary of the results.
 
