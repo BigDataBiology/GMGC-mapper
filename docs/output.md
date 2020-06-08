@@ -15,6 +15,8 @@ gene.coords.gbk is the gene information
 
 
 
+
+
 ## hit_table.tsv :
 
 The results of the queries to the GMGC.
@@ -27,17 +29,16 @@ There are five columns in the file.
 - gene_dna : the dna sequence of the hitted gene in GMGC
 - gene_protein : the protein sequence of the hitted gene in GMGC
 
-#### Align_category
+Align_category
 
 - EXACT : above 95% nucleotide identity with at least 95% coverage
-
 - SIMILAR : above 80% nucleotide identity with at least 80% coverage
-
 - MATCH : above 50% nucleotide identity with at least 50% coverage
-
 - NO MATCH : no match in GMGC
 
-  
+
+
+
 
 ## genome_bin.tsv
 
@@ -47,6 +48,8 @@ There are two columns in the file.
 
 * genome_bin : the name of genome bins in GMGC
 * times_gene_hit : the times of input genes hitting it 
+
+
 
 
 

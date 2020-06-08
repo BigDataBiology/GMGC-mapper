@@ -12,10 +12,13 @@ from safeout import safeout
 from tqdm import tqdm
 import gzip
 import bz2
+import subprocess
+from os import path
+import tempfile
+
 from .alignment import identity_coverage
 from .gmgc_finder_version import __version__
 
-import tempfile
 
 def parse_args(args):
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -34,8 +37,7 @@ def parse_args(args):
     return parser.parse_args()
 
 def gene_prediction(fasta_input,output):
-    import subprocess
-    from os import path
+
     print('Start gene prediction...')
 
 
@@ -279,6 +281,8 @@ def main(args=None):
             for s in summary:
                 print(s)
                 ofile.write(s+'\n')
+
+        subprocess.call('cp docs/output.md {}'.format(out), shell=True)
 
 
 
