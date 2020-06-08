@@ -14,21 +14,27 @@ The input must contain a genome file or both DNA and Protein gene file.
 
 ## Examples
 
-Input is genome sequence.
+1. Input is a genome sequence (`input.fasta`).
 
 ```bash
 gmgc-finder -i input.fasta -o output
 ```
 
-Input is DNA/protein gene sequence.
+GMGC-finder will call `prodigal` to predict genes and then process each gene.
+
+2. Input is DNA/protein gene sequences (`genes.fna` and `genes.faa`,
+   respectfully).
 
 ```bash
 gmgc-finder -nt_input genes.fna -aa_input genes.faa -o output
 ```
 
-If input is metagenome , you can use [NGLess](https://github.com/ngless-toolkit/ngless) for assemble and gene prediction.
+# Processing metagenomes using NGLess
 
-# NGLess
+If your input is metagenome, you can use
+[NGLess](https://github.com/ngless-toolkit/ngless) for assembly and gene
+prediction and, then, pass the results to GMGC-finder.
+
 
 ## Install
 
@@ -41,10 +47,9 @@ conda install -c bioconda ngless
 ## Assembly and gene prediction
 
 ```bash
-ngless "0.6"
+ngless "1.0"
 
-
-sample = 'SAMEA2621155.sampled'
+sample = 'SAMEA2621155'
 input = load_mocat_sample(sample)
 
 preprocess(input, keep_singles=False) using |read|:
