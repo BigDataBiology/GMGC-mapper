@@ -26,15 +26,16 @@ def identity_coverage(dna_query,protein_query,dna_target,protein_target):
        if identity_coverage(query, protein_seq) >= (0.5, 0.5): return "MATCH"
        return "NO MATCH"
     """
-    try:
-        sw_dna = skbio.alignment.local_pairwise_align_ssw(DNA(dna_query),DNA(dna_target))
-    except:
-        sw_dna = skbio.alignment.local_pairwise_align_nucleotide(DNA(dna_query), DNA(dna_target))
-    dna_identity,align_length = extract_sw(sw_dna)
-    dna_coverage = align_length / min(len(dna_query),len(dna_target))
-    if dna_identity >= 0.95 and dna_coverage >= 0.95:
+    if dna_query != '':
+        try:
+            sw_dna = skbio.alignment.local_pairwise_align_ssw(DNA(dna_query),DNA(dna_target))
+        except:
+            sw_dna = skbio.alignment.local_pairwise_align_nucleotide(DNA(dna_query), DNA(dna_target))
+        dna_identity,align_length = extract_sw(sw_dna)
+        dna_coverage = align_length / min(len(dna_query),len(dna_target))
+        if dna_identity >= 0.95 and dna_coverage >= 0.95:
 
-        return 'EXACT'
+            return 'EXACT'
 
     else:
         try:
@@ -50,3 +51,5 @@ def identity_coverage(dna_query,protein_query,dna_target,protein_target):
             return 'MATCH'
 
         return 'NO MATCH'
+
+

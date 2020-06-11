@@ -10,7 +10,7 @@
 
 * `-aa_input` : path to the input Protein gene file(.fasta/.gz/.bz2).
 
-The input must contain a genome file or both DNA and Protein gene file.
+The input must contain a genome file or DNA and Protein gene file or just Protein gene file.
 
 ## Examples
 
@@ -28,7 +28,9 @@ GMGC-finder will call `prodigal` to predict genes and then process each gene.
 ```bash
 gmgc-finder -nt_input genes.fna -aa_input genes.faa -o output
 ```
-
+```bash
+gmgc-finder -aa_input genes.faa -o output
+```
 # Processing metagenomes using NGLess
 
 If your input is metagenome, you can use

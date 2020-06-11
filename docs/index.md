@@ -14,5 +14,5 @@ categories and genome bins.
 
 * `-aa_input` : path to the input Protein gene file(.fasta/.gz/.bz2).
 
-The input must contain a genome file or both DNA and Protein gene file.
+The input must contain a genome file or DNA and Protein gene file or just Protein gene file.
 

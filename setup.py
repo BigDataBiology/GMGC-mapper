@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup,find_packages
 
 exec(compile(open('gmgc_finder/gmgc_finder_version.py').read(),
              'gmgc_finder/gmgc_finder_version.py', 'exec'))
@@ -22,7 +22,8 @@ setup(name='GMGC-Finder',
           'safeout',
           'tqdm',
       ],
-      include_package_data=True,
+      package_data={
+             'docs': ['*.md']},
       zip_safe=False,
       entry_points={
             'console_scripts': ['gmgc-finder=gmgc_finder.main:main'],

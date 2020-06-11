@@ -7,7 +7,6 @@ import os
 import requests
 import pandas as pd
 import json
-import time
 from safeout import safeout
 from tqdm import tqdm
 import gzip
@@ -15,7 +14,10 @@ import bz2
 import subprocess
 from os import path
 import tempfile
-
+from pkg_resources import resource_string
+import datetime
+import time
+import hashlib
 from .alignment import identity_coverage
 from .gmgc_finder_version import __version__
 
@@ -30,9 +32,9 @@ def parse_args(args):
                         help='Output directory (will be created if non-existent)',
                         dest='output',
                         default = None)
-    parser.add_argument('-nt_input',required=False,help = 'Path to the input DNA gene file.',dest='nt_input',
+    parser.add_argument('-nt_genes',required=False,help = 'Path to the input DNA gene file.',dest='nt_input',
                         default = None)
-    parser.add_argument('-aa_input',required=False,help = 'Path to the input Protein gene file.',dest='aa_input',
+    parser.add_argument('-aa_genes',required=False,help = 'Path to the input Protein gene file.',dest='aa_input',
                         default = None)
     return parser.parse_args()
 
@@ -141,27 +143,37 @@ def query_gmgc(fasta_file,max_try = 10):
     return None
 
 
-
-
 def realignment(dna_path,aa_path,besthit):
+    def alignment(record_dna,record_aa,hit_index,dna = False):
+            hit_result = []
+            if dna == True:
+                query_dna = str(record_dna.seq)
+            else:
+                query_dna = ''
+            query_aa = str(record_aa.seq)
+            query_name = hit_index['query_name']
+            if hit_index['hits'] != []:
+                hit_gene_id = hit_index['hits'][0]['gene_id']
+                target_dna = hit_index['hits'][0]['dna_sequence']
+                target_aa =  hit_index['hits'][0]['protein_sequence']
+                if target_aa and target_dna is not None:
+                    realign_result = identity_coverage(query_dna,query_aa,target_dna,target_aa)
+                    hit_result.extend([query_name,hit_gene_id,realign_result,target_dna,target_aa])
+                else:
+                    hit_result.extend([query_name, None, 'NO HIT', None, None])
+            return hit_result
+
     results = []
-    for record_dna, record_aa, hit_index in zip(SeqIO.parse(dna_path,'fasta'),
-                                                SeqIO.parse(aa_path,'fasta'),
-                                                besthit):
-        hit_result = []
-        query_dna = str(record_dna.seq)
-        query_aa = str(record_aa.seq)
-        query_name = hit_index['query_name']
-        if hit_index['hits'] != []:
-            hit_gene_id = hit_index['hits'][0]['gene_id']
-            target_dna = hit_index['hits'][0]['dna_sequence']
-            target_aa =  hit_index['hits'][0]['protein_sequence']
-            if target_aa and target_dna is not None:
-                realign_result = identity_coverage(query_dna,query_aa,target_dna,target_aa)
-                hit_result.extend([query_name,hit_gene_id,realign_result,target_dna,target_aa])
-                results.append(hit_result)
-        else:
-            hit_result.extend([query_name, None, 'NO HIT', None, None])
+    if dna_path is not None:
+        for record_dna, record_aa, hit_index in zip(SeqIO.parse(dna_path,'fasta'),
+                                                    SeqIO.parse(aa_path,'fasta'),
+                                                    besthit):
+            hit_result = alignment(record_dna,record_aa,hit_index,dna = True)
+            results.append(hit_result)
+    else:
+        for  record_aa, hit_index in zip(SeqIO.parse(aa_path,'fasta'),
+                                                    besthit):
+            hit_result = alignment('',record_aa,hit_index,dna=False)
             results.append(hit_result)
     return results
 
@@ -195,19 +207,37 @@ def query_genome_bin(hit_table):
     genome_bin = genome_bin.reset_index().rename(columns={'index':'genome_bin'})
     return genome_bin
 
+def CalSha256(filname):
+    with open(filname, "rb") as f:
+        sha256obj = hashlib.sha256()
+        sha256obj.update(f.read())
+        hash_value = sha256obj.hexdigest()
+        return hash_value
+
+def convert_command(command):
+    command_line = 'gmgc-finder '
+    for parameter in command:
+        if command[parameter] is not None:
+            command_line = command_line + '-'+ parameter + ' '
+            command_line = command_line + command[parameter] + ' '
+    return command_line
+
 def main(args=None):
+
+    start = datetime.datetime.now()
+
     if args is None:
         args = sys.argv
-
     args = parse_args(args)
+
+    command_args = vars(args)
+    command_line = convert_command(command_args)
     out = args.output
     if not os.path.exists(out):
         os.makedirs(out)
 
     with tempfile.TemporaryDirectory() as tmpdirname:
-        if args.nt_input is None or args.aa_input is None:
-            if args.genome_fasta is None:
-                raise Exception("Need to input both dna and protein gene file or a genome file!")
+        if args.genome_fasta is not None:
             gene_prediction(args.genome_fasta,out)
 
             split_file(out + '/prodigal_out.faa',
@@ -215,19 +245,31 @@ def main(args=None):
             num_split = split_file(out + '/prodigal_out.fna',
                                    output_dir=tmpdirname + '/split_file',is_dna=True)
         else:
-            assert gene_num(args.nt_input) == gene_num(args.aa_input), "Input dna and protein gene file must have the same sequence number."
-            split_file(args.aa_input,
-                                   output_dir=tmpdirname + '/split_file',is_dna=False)
-            num_split = split_file(args.nt_input,
-                                   output_dir=tmpdirname + '/split_file',is_dna=True)
+            if args.aa_input is None:
+                raise Exception("Need to input protein gene file or a genome file!")
+
+            else:
+                if args.nt_input is not None:
+                    assert gene_num(args.nt_input) == gene_num(args.aa_input), "Input dna and protein gene file must have the same sequence number."
+                    split_file(args.aa_input,
+                                           output_dir=tmpdirname + '/split_file',is_dna=False)
+                    num_split = split_file(args.nt_input,
+                                           output_dir=tmpdirname + '/split_file',is_dna=True)
+
+                else:
+                    num_split = split_file(args.aa_input,
+                                           output_dir=tmpdirname + '/split_file',is_dna=False)
         hit_table = []
         print('Starting GMGC queries (total: {} batches to process)'.format(num_split))
         for index in tqdm(range(num_split)):
             besthit = query_gmgc(tmpdirname+'/split_file/split_{}.faa'.format(index+1))
             if besthit is not None:
                 besthit = json.loads(bytes.decode(besthit.content))['results']
-                hit_table_index = realignment(tmpdirname+'/split_file/split_{}.fna'.format(index+1),
-                                              tmpdirname+'/split_file/split_{}.faa'.format(index+1),besthit)
+                if args.nt_input is not None:
+                    hit_table_index = realignment(tmpdirname+'/split_file/split_{}.fna'.format(index+1),
+                                                  tmpdirname+'/split_file/split_{}.faa'.format(index+1),besthit)
+                else:
+                    hit_table_index = realignment(None,tmpdirname+'/split_file/split_{}.faa'.format(index+1),besthit)
                 hit_table.extend(hit_table_index)
         hit_table = pd.DataFrame(hit_table)
         hit_table.columns = ['query_name','gene_id','align_category','gene_dna','gene_protein']
@@ -282,7 +324,114 @@ def main(args=None):
                 print(s)
                 ofile.write(s+'\n')
 
-        subprocess.call('cp docs/output.md {}'.format(out), shell=True)
+
+        output_content = resource_string('gmgc_finder', 'output.md')
+        with safeout(out+'/README.md', 'wt') as ofile:
+                ofile.write(bytes.decode(output_content))
+
+        end = datetime.datetime.now()
+
+        output_log = []
+        output_dict = {}
+        output_log.append('Command_line: '+command_line)
+        output_log.append('GMGC-Finder: '+ __version__)
+
+        output_log.append('Start time: '+str(start))
+        output_log.append('End time: '+str(end))
+        output_log.append('Run time: '+str((end-start).seconds))
+
+        output_dict['Command_line'] = command_line
+        output_dict['GMGC-Finder'] = __version__
+        output_dict['Start time'] = str(start)
+        output_dict['End time'] = str(end)
+        output_dict['Run time'] = str((end-start).seconds)
+
+        output_log.append('\n# Inputs')
+
+        if args.genome_fasta is not None:
+                input_name = os.path.basename(args.genome_fasta)
+                full_path = os.path.abspath(args.genome_fasta)
+                mtime = time.ctime(os.path.getmtime(args.genome_fasta))
+                file_size = str(os.path.getsize(args.genome_fasta))
+                sha256 = CalSha256(args.genome_fasta)
+                output_log.append('-input_name: '+input_name)
+                output_log.append('-full_path: '+full_path)
+                output_log.append('-mtime: '+mtime)
+                output_log.append('-file size: '+ file_size)
+                output_log.append('-sha256 '+ sha256)
+                output_dict['#Inputs'] = {}
+                output_dict['#Inputs']['input_name'] = input_name
+                output_dict['#Inputs']['full_path'] = full_path
+                output_dict['#Inputs']['mtime'] = str(mtime)
+                output_dict['#Inputs']['file size'] = file_size
+                output_dict['#Inputs']['sha256'] = sha256
+        else:
+            if args.nt_input is not None:
+                input_name_nt = os.path.basename(args.nt_input)
+                full_path_nt = os.path.abspath(args.nt_input)
+                mtime_nt = time.ctime(os.path.getmtime(args.nt_input))
+                file_size_nt = str(os.path.getsize(args.nt_input))
+                sha256_nt = CalSha256(args.nt_input)
+
+                input_name_aa = os.path.basename(args.aa_input)
+                full_path_aa = os.path.abspath(args.aa_input)
+                mtime_aa = time.ctime(os.path.getmtime(args.aa_input))
+                file_size_aa = str(os.path.getsize(args.aa_input))
+                sha256_aa = CalSha256(args.aa_input)
+
+                output_log.append('-nt_input_name: '+input_name_nt)
+                output_log.append('-nt_full_path_nt: '+full_path_nt)
+                output_log.append('-nt_mtime: '+mtime_nt)
+                output_log.append('-nt_file size: '+ file_size_nt)
+                output_log.append('-nt_sha256 '+ sha256_nt+'\n')
+
+                output_log.append('-aa_input_name: '+input_name_aa)
+                output_log.append('-aa_full_path: '+full_path_aa)
+                output_log.append('-aa_mtime: '+mtime_aa)
+                output_log.append('-aa_file size: '+ file_size_aa)
+                output_log.append('-aa_sha256 '+ sha256_aa)
+
+                output_dict['#Inputs'] = {}
+
+                output_dict['#Inputs']['nt_input_name'] = input_name_nt
+                output_dict['#Inputs']['nt_full_path'] = full_path_nt
+                output_dict['#Inputs']['nt_mtime'] = str(mtime_nt)
+                output_dict['#Inputs']['nt_file size'] = file_size_nt
+                output_dict['#Inputs']['nt_sha256'] = sha256_nt
+
+                output_dict['#Inputs']['aa_input_name'] = input_name_aa
+                output_dict['#Inputs']['aa_full_path'] = full_path_aa
+                output_dict['#Inputs']['aa_mtime'] = str(mtime_aa)
+                output_dict['#Inputs']['aa_file size'] = file_size_aa
+                output_dict['#Inputs']['aa_sha256'] = sha256_aa
+
+            else:
+                input_name_aa = os.path.basename(args.aa_input)
+                full_path_aa = os.path.abspath(args.aa_input)
+                mtime_aa = time.ctime(os.path.getmtime(args.aa_input))
+                file_size_aa = str(os.path.getsize(args.aa_input))
+                sha256_aa = CalSha256(args.aa_input)
+                output_log.append('-aa_input_name: '+input_name_aa)
+                output_log.append('-aa_full_path: '+full_path_aa)
+                output_log.append('-aa_mtime: '+mtime_aa)
+                output_log.append('-aa_file size: '+ file_size_aa)
+                output_log.append('-aa_sha256 '+ sha256_aa)
+                output_dict['#Inputs'] = {}
+                output_dict['#Inputs']['aa_input_name'] = input_name_aa
+                output_dict['#Inputs']['aa_full_path'] = full_path_aa
+                output_dict['#Inputs']['aa_mtime'] = str(mtime_aa)
+                output_dict['#Inputs']['aa_file size'] = file_size_aa
+                output_dict['#Inputs']['aa_sha256'] = sha256_aa
+
+
+
+        with safeout(out+'/runlog.txt', 'wt') as ofile:
+            for s in output_log:
+                ofile.write(s+'\n')
+
+        with safeout(out+'/runlog.json','wt') as ofile:
+            output_json = json.dumps(output_dict)
+            ofile.write(output_json)
 
 
 

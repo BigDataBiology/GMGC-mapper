@@ -32,10 +32,13 @@ Input is genome sequence.
 gmgc-finder -i input.fasta -o output
 ```
 
-Input is DNA/protein gene sequence.
+Input is DNA/protein gene sequence(You can just input the protein gene sequences).
 
 ```bash
 gmgc-finder -nt_input genes.fna -aa_input genes.faa -o output
+```
+```bash
+gmgc-finder -aa_input genes.faa -o output
 ```
 
 If yout input is a metagenome, you can use
