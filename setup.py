@@ -1,3 +1,4 @@
+from os import path
 from setuptools import setup,find_packages
 
 exec(compile(open('gmgc_finder/gmgc_finder_version.py').read(),
@@ -8,6 +9,13 @@ try:
     long_description = open('README.md', encoding='utf-8').read()
 except:
     long_description = open('README.md').read()
+
+
+# A bit hacky, but we want to have the output.md file in the package directory
+# so it can be found by the setuptools machinery
+if not path.exists('gmgc_finder/output.md'):
+    from shutil import copyfile
+    copyfile('docs/output.md', 'gmgc_finder/output.md')
 
 setup(name='GMGC-Finder',
       version=__version__,
