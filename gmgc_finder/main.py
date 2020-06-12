@@ -32,10 +32,16 @@ def parse_args(args):
                         help='Output directory (will be created if non-existent)',
                         dest='output',
                         default = None)
-    parser.add_argument('-nt_genes',required=False,help = 'Path to the input DNA gene file.',dest='nt_input',
-                        default = None)
-    parser.add_argument('-aa_genes',required=False,help = 'Path to the input Protein gene file.',dest='aa_input',
-                        default = None)
+    parser.add_argument('--nt_genes',
+                        required=False,
+                        help='Path to the input DNA gene file (FASTA format)',
+                        dest='nt_input',
+                        default=None)
+    parser.add_argument('--aa_genes',
+                        required=False,
+                        help='Path to the input amino acid gene file (FASTA format)',
+                        dest='aa_input',
+                        default=None)
     return parser.parse_args()
 
 def gene_prediction(fasta_input,output):
