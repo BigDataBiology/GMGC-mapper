@@ -1,16 +1,21 @@
 # GMGC-Finder
 
-Command line tool to query input genome to GMGC project. 
+![gmgc_finder_test](https://github.com/BigDataBiology/GMGC-Finder/workflows/gmgc_finder_test/badge.svg)
+
+
+Command line tool to query the Global Microbial Gene Catalog (GMGC).
 
 ## Install
-
-GMGC-Finder requires [prodigal](https://github.com/hyattpd/Prodigal)
 
 Install from source
 
 ```bash
 python setup.py install
 ```
+
+GMGC-Finder requires [prodigal](https://github.com/hyattpd/Prodigal) to be
+available for genome mode.
+
 
 ## Parameters
 
@@ -22,21 +27,23 @@ python setup.py install
 
 * `-aa_input`: path to the input Protein gene file(.fasta/.gz/.bz2).
 
-The input must contain a genome file or both DNA and Protein gene files.
-
 ## Examples
 
-Input is genome sequence.
+1. Input is a genome sequence.
 
 ```bash
 gmgc-finder -i input.fasta -o output
 ```
 
-Input is DNA/protein gene sequence(You can just input the protein gene sequences).
+2. Input is DNA/protein gene sequences
 
 ```bash
 gmgc-finder -nt_input genes.fna -aa_input genes.faa -o output
 ```
+
+The nucleotide input is optional (but should be used if available so that the
+quality of the hits can be refined):
+
 ```bash
 gmgc-finder -aa_input genes.faa -o output
 ```
@@ -56,5 +63,6 @@ The output folder will contain
 4. Human readable summary.
 
 For more details, [read the
-docs](https://genome2gmgc.readthedocs.io/en/latest/output/). A description of
+docs](https://gmgc-finder.readthedocs.io/en/latest/output/). A description of
 the outputs is also written to output folder for convenience.
+
