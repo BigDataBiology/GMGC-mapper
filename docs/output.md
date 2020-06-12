@@ -48,7 +48,16 @@ Note that GMGC unigenes can while not all GMGC unigenes are contained in a
 genome bin, some are contained in many. Thus, the total counts will not (except
 by coincidence) correspond to the number of genes queried.
 
-## Summary (`summary.txt`)
+## Summary (`summary.txt` and `runlog.yaml`)
 
-Human-readable summary of the results.
+The file `summary.txt` provides a human-readable summary of the results, while
+`runlog.yaml` is a summary of run (as a YaML file, it is both machine and
+human-readable).
+
+
+The file `summary.txt` should be reproducible and running GMGC-finder twice on
+the same input should produce the same results. By design, though,
+`runglog.yaml` includes information on timing and, thus, is not reproducible.
+
+
 
