@@ -36,7 +36,7 @@ setup(name='GMGC-Finder',
           'scikit-bio',
           'safeout',
           'tqdm',
-          'yaml',
+          'pyyaml',
       ],
       package_data={
              'gmgc_finder': ['*.md']},
