@@ -3,10 +3,17 @@ from setuptools import setup,find_packages
 exec(compile(open('gmgc_finder/gmgc_finder_version.py').read(),
              'gmgc_finder/gmgc_finder_version.py', 'exec'))
 
+
+try:
+    long_description = open('README.md', encoding='utf-8').read()
+except:
+    long_description = open('README.md').read()
+
 setup(name='GMGC-Finder',
       version=__version__,
-      description='map genome to gmgc',
-      long_description='',
+      description='Map genes and genome to the Global Microbial Gene Catalog (GMGC)',
+      long_description = long_description,
+      long_description_content_type = 'text/markdown',
       classifiers=[
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3.7',
