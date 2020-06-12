@@ -30,7 +30,7 @@ setup(name='GMGC-Finder',
           'tqdm',
       ],
       package_data={
-             'docs': ['*.md']},
+             'gmgc_finder': ['*.md']},
       zip_safe=False,
       entry_points={
             'console_scripts': ['gmgc-finder=gmgc_finder.main:main'],
