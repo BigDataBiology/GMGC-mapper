@@ -32,6 +32,9 @@ setup(name='GMGC-Finder',
       license='MIT',
       packages=['gmgc_finder'],
       install_requires=[
+          # Technically, numpy is not directly needed, but some downstream
+          # dependencies use it and fail to declare they need it:
+          'numpy',
           'Biopython',
           'scikit-bio',
           'safeout',
