@@ -342,7 +342,7 @@ def main(args=None):
                 ofile.write(s+'\n')
 
 
-        output_content = resource_string('gmgc_finder', 'output.md')
+        output_content = resource_string(__name__, 'output.md')
         with safeout(out+'/README.md', 'wt') as ofile:
                 ofile.write(bytes.decode(output_content))
 
@@ -369,6 +369,7 @@ def main(args=None):
 
         with safeout(out+'/runlog.yaml', 'wt') as ofile:
             yaml.dump(run_metadata, ofile, default_flow_style=False)
+
 
 
 if __name__ == '__main__':
