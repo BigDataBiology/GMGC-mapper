@@ -7,7 +7,6 @@ import os
 import requests
 import pandas as pd
 import json
-from safeout import safeout
 from tqdm import tqdm
 import gzip
 import bz2
@@ -18,6 +17,8 @@ from pkg_resources import resource_string
 import datetime
 import time
 import yaml
+import numpy as np
+from atomicwrites import atomic_write
 from .alignment import identity_coverage
 from .gmgc_finder_version import __version__
 
@@ -320,30 +321,35 @@ def main(args=None):
             summary.append(' -{0} ({1:.1%}) had no match in the GMGC'
                         .format(no_match, no_match/num_gene))
 
-        genome_bin = query_genome_bin(hit_table)
-        summary.append('\n\n'+'*' * 30 + 'GMGC-Finder results genome_bin table' + '*' * 30+'\n\n')
-        summary.append(' '*36+ 'genome bin'+' '*6+'times a gene hitting it')
-        for row in genome_bin.itertuples():
-            bin = getattr(row,'genome_bin')
-            number = getattr(row, 'times_gene_hit')
-            summary.append(' '*35 +str(bin)+' '*10+str(number))
+        num_genes = hit_table.shape[0]
 
-        with safeout(out+'/genome_bin.tsv', 'wt') as ofile:
+        genome_bin = query_genome_bin(hit_table)
+        genome_bin = genome_bin.sort_values('times_gene_hit',ascending=False)
+        summary.append('\n\n'+'*' * 30 + 'GMGC-Finder results genome_bin summary' + '*' * 30+'\n')
+
+        num_hitting = genome_bin['times_gene_hit'].values
+        summary.append('{} bins were reported for >50% of genes'.format(np.sum(num_hitting > num_gene*0.5)))
+        summary.append('{} bins were reported for >25% of genes'.format(np.sum(num_hitting > num_gene*0.25)))
+        summary.append('{} bins were reported for >10% of genes'.format(np.sum(num_hitting > num_gene*0.1)))
+
+
+
+        with atomic_write(out+'/genome_bin.tsv', 'wt') as ofile:
             ofile.write('# Genome_bin from GMGC-Finder v{}\n'.format(__version__))
             genome_bin.to_csv(ofile, sep='\t', index=False)
 
-        with safeout(out+'/hit_table.tsv', 'wt') as ofile:
+        with atomic_write(out+'/hit_table.tsv', 'wt') as ofile:
             ofile.write('# Results from GMGC-Finder v{}\n'.format(__version__))
             hit_table.to_csv(ofile, sep='\t', index=False)
 
-        with safeout(out+'/summary.txt', 'wt') as ofile:
+        with atomic_write(out+'/summary.txt', 'wt') as ofile:
             for s in summary:
                 print(s)
                 ofile.write(s+'\n')
 
 
         output_content = resource_string(__name__, 'output.md')
-        with safeout(out+'/README.md', 'wt') as ofile:
+        with atomic_write(out+'/README.md', 'wt') as ofile:
                 ofile.write(bytes.decode(output_content))
 
         end = datetime.datetime.now()
@@ -367,7 +373,7 @@ def main(args=None):
             run_metadata['Inputs'].append(
                     {'aa_input': input_metadata(args.aa_input)})
 
-        with safeout(out+'/runlog.yaml', 'wt') as ofile:
+        with atomic_write(out+'/runlog.yaml', 'wt') as ofile:
             yaml.dump(run_metadata, ofile, default_flow_style=False)
 
 
