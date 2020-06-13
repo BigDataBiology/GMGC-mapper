@@ -321,7 +321,6 @@ def main(args=None):
             summary.append(' -{0} ({1:.1%}) had no match in the GMGC'
                         .format(no_match, no_match/num_gene))
 
-        num_genes = hit_table.shape[0]
 
         genome_bin = query_genome_bin(hit_table)
         genome_bin = genome_bin.sort_values('times_gene_hit',ascending=False)
@@ -334,22 +333,22 @@ def main(args=None):
 
 
 
-        with atomic_write(out+'/genome_bin.tsv', 'wt') as ofile:
+        with atomic_write(out+'/genome_bin.tsv', overwrite=True) as ofile:
             ofile.write('# Genome_bin from GMGC-Finder v{}\n'.format(__version__))
             genome_bin.to_csv(ofile, sep='\t', index=False)
 
-        with atomic_write(out+'/hit_table.tsv', 'wt') as ofile:
+        with atomic_write(out+'/hit_table.tsv', overwrite=True) as ofile:
             ofile.write('# Results from GMGC-Finder v{}\n'.format(__version__))
             hit_table.to_csv(ofile, sep='\t', index=False)
 
-        with atomic_write(out+'/summary.txt', 'wt') as ofile:
+        with atomic_write(out+'/summary.txt', overwrite=True) as ofile:
             for s in summary:
                 print(s)
                 ofile.write(s+'\n')
 
 
         output_content = resource_string(__name__, 'output.md')
-        with atomic_write(out+'/README.md', 'wt') as ofile:
+        with atomic_write(out+'/README.md', overwrite=True) as ofile:
                 ofile.write(bytes.decode(output_content))
 
         end = datetime.datetime.now()
@@ -373,7 +372,7 @@ def main(args=None):
             run_metadata['Inputs'].append(
                     {'aa_input': input_metadata(args.aa_input)})
 
-        with atomic_write(out+'/runlog.yaml', 'wt') as ofile:
+        with atomic_write(out+'/runlog.yaml',overwrite=True) as ofile:
             yaml.dump(run_metadata, ofile, default_flow_style=False)
 
 
