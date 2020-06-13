@@ -40,6 +40,7 @@ setup(name='GMGC-Finder',
           'safeout',
           'tqdm',
           'pyyaml',
+           'atomicwrites',
       ],
       package_data={
              'gmgc_finder': ['*.md']},

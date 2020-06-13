@@ -18,6 +18,7 @@ jobs:
         pip install numpy
         pip install .
         pip install pytest
+        pip install atomicwrites
     - name: Test with pytest
       run: |
         python -m pytest ./test/test_alignment.py
