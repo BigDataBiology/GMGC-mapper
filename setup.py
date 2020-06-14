@@ -11,12 +11,6 @@ except:
     long_description = open('README.md').read()
 
 
-# A bit hacky, but we want to have the output.md file in the package directory
-# so it can be found by the setuptools machinery
-if not path.exists('gmgc_finder/output.md'):
-    from shutil import copyfile
-    copyfile('docs/output.md', 'gmgc_finder/output.md')
-
 setup(name='GMGC-Finder',
       version=__version__,
       description='Map genes and genome to the Global Microbial Gene Catalog (GMGC)',

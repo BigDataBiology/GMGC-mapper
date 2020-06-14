@@ -2,4 +2,3 @@ __pycache__/
 Genome2gmgc.egg-info/
 build/
 dist/
-gmgc_finder/output.md
