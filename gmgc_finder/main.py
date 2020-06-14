@@ -22,6 +22,10 @@ from atomicwrites import atomic_write
 from .alignment import identity_coverage
 from .gmgc_finder_version import __version__
 
+GMGC_API_BASE_URL = 'http://gmgc.embl.de/api/v1.0'
+USER_AGENT_HEADER = {
+        'User-Agent': 'GMGC-finder v{}'.format(__version__)
+        }
 
 def parse_args(args):
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -141,7 +145,11 @@ def query_gmgc(fasta_file,max_try = 10):
         try:
             parameter = {'mode': 'besthit', 'return_seqs': True}
             fasta = {'fasta': open('{}'.format(fasta_file), 'rb')}
-            besthit = requests.post('http://gmgc.embl.de/api/v1.0/query/sequence', data = parameter, files = fasta)
+            besthit = requests.post(
+                    f'{GMGC_API_BASE_URL}/query/sequence',
+                    headers=USER_AGENT_HEADER,
+                    data=parameter,
+                    files=fasta)
         except Exception:
             print('GMGC-Finder query failed {} times!'.format(try_index+1))
             time.sleep(60)
@@ -203,7 +211,9 @@ def query_genome_bin(hit_table):
     hit_gene_id = hit_table['gene_id'].tolist()
     genome_bin_dict = {}
     for gene_id in hit_gene_id:
-        genome_bin = requests.get('http://gmgc.embl.de/api/v1.0/unigene/{}/genome_bins'.format(gene_id))
+        genome_bin = requests.get(
+                f'{GMGC_API_BASE_URL}/unigene/{gene_id}/genome_bins',
+                headers=USER_AGENT_HEADER)
         genome_bin = json.loads(bytes.decode(genome_bin.content))['genome_bins']
         for bin in genome_bin:
             if bin not in genome_bin_dict:
