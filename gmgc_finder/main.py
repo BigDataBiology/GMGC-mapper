@@ -37,28 +37,40 @@ def parse_args(args):
                         help='Output directory (will be created if non-existent)',
                         dest='output',
                         default = None)
-    parser.add_argument('--nt_genes',
+    parser.add_argument('--nt-genes', '--nt_genes',
                         required=False,
                         help='Path to the input DNA gene file (FASTA format)',
                         dest='nt_input',
                         default=None)
-    parser.add_argument('--aa_genes',
+    parser.add_argument('--aa-genes', '--aa_genes',
                         required=False,
                         help='Path to the input amino acid gene file (FASTA format)',
                         dest='aa_input',
                         default=None)
     return parser.parse_args()
 
-def gene_prediction(fasta_input,output):
+def validate_args(args):
+    def expect_file(f):
+        if f is not None:
+            if not os.path.exists(f):
+                sys.stderr.write(f"GMGC-finder Error: Expected file '{f}' does not exist\n")
+                sys.exit(1)
+    expect_file(args.genome_fasta)
+    expect_file(args.aa_input)
+    expect_file(args.nt_input)
+    if args.genome_fasta is None and args.aa_input is None:
+        sys.stderr.write("GMGC-finder Error: At least one of --input or --aa-genes is necessary\n")
+        sys.stderr.exit(1)
+
+def gene_prediction(fasta_input, output, tmpdirname):
 
     print('Start gene prediction...')
 
 
     if os.path.splitext(fasta_input)[1] == '.bz2':
-        output_file = bz2.BZ2File(fasta_input)
-        open(output + '/input.fasta', "wb+").write(output_file.read())
-        output_file.close()
-        fasta_input = output + '/input.fasta'
+        with bz2.BZ2File(fasta_input) as ifile:
+            open(tmpdirname + '/input.fasta', "wb+").write(output_file.read())
+        fasta_input = tmpdirname + '/input.fasta'
 
 
     subprocess.check_call(
@@ -251,6 +263,7 @@ def main(args=None):
     if args is None:
         args = sys.argv
     args = parse_args(args)
+    validate_args(args)
 
     command_args = vars(args)
     command_line = convert_command(command_args)
@@ -259,20 +272,22 @@ def main(args=None):
         os.makedirs(out)
 
     with tempfile.TemporaryDirectory() as tmpdirname:
-        if args.genome_fasta is not None:
-            gene_prediction(args.genome_fasta,out)
+        try:
+            if args.genome_fasta is not None:
+                gene_prediction(args.genome_fasta, out, tmdirdname)
 
-            split_file(out + '/prodigal_out.faa',
-                                   output_dir=tmpdirname + '/split_file',is_dna=False)
-            num_split = split_file(out + '/prodigal_out.fna',
-                                   output_dir=tmpdirname + '/split_file',is_dna=True)
-        else:
-            if args.aa_input is None:
-                raise Exception("Need to input protein gene file or a genome file!")
-
+                split_file(out + '/prodigal_out.faa',
+                                       output_dir=tmpdirname + '/split_file',is_dna=False)
+                num_split = split_file(out + '/prodigal_out.fna',
+                                       output_dir=tmpdirname + '/split_file',is_dna=True)
             else:
                 if args.nt_input is not None:
-                    assert gene_num(args.nt_input) == gene_num(args.aa_input), "Input dna and protein gene file must have the same sequence number."
+                    n_nt = gene_num(args.nt_input)
+                    n_aa = gene_num(args.aa_input)
+                    if n_nt != n_aa:
+                        sys.stderr.write("Input DNA and amino acide gene files must have the same sequence number!\n")
+                        sys.stderr.write(f"DNA file has {n_nt} while amino acid file has {n_aa}!")
+                        sys.exit(1)
                     split_file(args.aa_input,
                                            output_dir=tmpdirname + '/split_file',is_dna=False)
                     num_split = split_file(args.nt_input,
@@ -281,103 +296,108 @@ def main(args=None):
                 else:
                     num_split = split_file(args.aa_input,
                                            output_dir=tmpdirname + '/split_file',is_dna=False)
-        hit_table = []
-        print('Starting GMGC queries (total: {} batches to process)'.format(num_split))
-        for index in tqdm(range(num_split)):
-            besthit = query_gmgc(tmpdirname+'/split_file/split_{}.faa'.format(index+1))
-            if besthit is not None:
-                besthit = json.loads(bytes.decode(besthit.content))['results']
-                if args.nt_input is not None:
-                    hit_table_index = realignment(tmpdirname+'/split_file/split_{}.fna'.format(index+1),
-                                                  tmpdirname+'/split_file/split_{}.faa'.format(index+1),besthit)
-                else:
-                    hit_table_index = realignment(None,tmpdirname+'/split_file/split_{}.faa'.format(index+1),besthit)
-                hit_table.extend(hit_table_index)
-        hit_table = pd.DataFrame(hit_table)
-        hit_table.columns = ['query_name','gene_id','align_category','gene_dna','gene_protein']
-        num_gene = hit_table.shape[0]
+            hit_table = []
+            print('Starting GMGC queries (total: {} batches to process)'.format(num_split))
+            for index in tqdm(range(num_split)):
+                besthit = query_gmgc(tmpdirname+'/split_file/split_{}.faa'.format(index+1))
+                if besthit is not None:
+                    besthit = json.loads(bytes.decode(besthit.content))['results']
+                    if args.nt_input is not None:
+                        hit_table_index = realignment(tmpdirname+'/split_file/split_{}.fna'.format(index+1),
+                                                      tmpdirname+'/split_file/split_{}.faa'.format(index+1),besthit)
+                    else:
+                        hit_table_index = realignment(None,tmpdirname+'/split_file/split_{}.faa'.format(index+1),besthit)
+                    hit_table.extend(hit_table_index)
+            hit_table = pd.DataFrame(hit_table)
+            hit_table.columns = ['query_name','gene_id','align_category','gene_dna','gene_protein']
+            num_gene = hit_table.shape[0]
 
 
-        summary = []
-        summary.append('*'*30+'GMGC-Finder results summary table'+'*'*30)
-        summary.append('- Processed {} genes'.format(num_gene))
-        match_result = hit_table['align_category'].value_counts().to_dict()
-        if 'EXACT' in match_result:
-            summary.append(' -{0} ({1:.1%}) were found in the GMGC at above 95% nucleotide identity with at least 95% coverage'
-                    .format(match_result['EXACT'], match_result['EXACT']/num_gene))
-        else:
-            summary.append(' -No genes were found in the GMGC at above 95% nucleotide identity with at least 95% coverage')
+            summary = []
+            summary.append('*'*30+'GMGC-Finder results summary table'+'*'*30)
+            summary.append('- Processed {} genes'.format(num_gene))
+            match_result = hit_table['align_category'].value_counts().to_dict()
+            if 'EXACT' in match_result:
+                summary.append(' -{0} ({1:.1%}) were found in the GMGC at above 95% nucleotide identity with at least 95% coverage'
+                        .format(match_result['EXACT'], match_result['EXACT']/num_gene))
+            else:
+                summary.append(' -No genes were found in the GMGC at above 95% nucleotide identity with at least 95% coverage')
 
-        if 'SIMILAR' in match_result:
-            summary.append(' -{0} ({1:.1%}) were found in the GMGC at above 80% nucleotide identity with at least 80% coverage'
-                    .format(match_result['SIMILAR'], match_result['SIMILAR']/num_gene))
-        else:
-            summary.append(' -No genes were found in the GMGC at above 80% nucleotide identity with at least 80% coverage')
+            if 'SIMILAR' in match_result:
+                summary.append(' -{0} ({1:.1%}) were found in the GMGC at above 80% nucleotide identity with at least 80% coverage'
+                        .format(match_result['SIMILAR'], match_result['SIMILAR']/num_gene))
+            else:
+                summary.append(' -No genes were found in the GMGC at above 80% nucleotide identity with at least 80% coverage')
 
-        if 'MATCH' in match_result:
-            summary.append(' -{0} ({1:.1%}) were found in the GMGC at above 50% nucleotide identity with at least 50% coverage'
-                    .format(match_result['MATCH'], match_result['MATCH']/num_gene))
-        else:
-            summary.append(' -No genes were found in the GMGC at above 50% nucleotide identity with at least 50% coverage')
+            if 'MATCH' in match_result:
+                summary.append(' -{0} ({1:.1%}) were found in the GMGC at above 50% nucleotide identity with at least 50% coverage'
+                        .format(match_result['MATCH'], match_result['MATCH']/num_gene))
+            else:
+                summary.append(' -No genes were found in the GMGC at above 50% nucleotide identity with at least 50% coverage')
 
-        no_match = match_result.get('NO MATCH', 0.0) + match_result.get('NO HIT', 0.0)
-        if no_match:
-            summary.append(' -{0} ({1:.1%}) had no match in the GMGC'
-                        .format(no_match, no_match/num_gene))
-
-
-        genome_bin = query_genome_bin(hit_table)
-        genome_bin = genome_bin.sort_values('times_gene_hit',ascending=False)
-        summary.append('\n\n'+'*' * 30 + 'GMGC-Finder results genome_bin summary' + '*' * 30+'\n')
-
-        num_hitting = genome_bin['times_gene_hit'].values
-        summary.append('{} bins were reported for >50% of genes'.format(np.sum(num_hitting > num_gene*0.5)))
-        summary.append('{} bins were reported for >25% of genes'.format(np.sum(num_hitting > num_gene*0.25)))
-        summary.append('{} bins were reported for >10% of genes'.format(np.sum(num_hitting > num_gene*0.1)))
+            no_match = match_result.get('NO MATCH', 0.0) + match_result.get('NO HIT', 0.0)
+            if no_match:
+                summary.append(' -{0} ({1:.1%}) had no match in the GMGC'
+                            .format(no_match, no_match/num_gene))
 
 
+            genome_bin = query_genome_bin(hit_table)
+            genome_bin = genome_bin.sort_values('times_gene_hit',ascending=False)
+            summary.append('\n\n'+'*' * 30 + 'GMGC-Finder results genome_bin summary' + '*' * 30+'\n')
 
-        with atomic_write(out+'/genome_bin.tsv', overwrite=True) as ofile:
-            ofile.write('# Genome_bin from GMGC-Finder v{}\n'.format(__version__))
-            genome_bin.to_csv(ofile, sep='\t', index=False)
-
-        with atomic_write(out+'/hit_table.tsv', overwrite=True) as ofile:
-            ofile.write('# Results from GMGC-Finder v{}\n'.format(__version__))
-            hit_table.to_csv(ofile, sep='\t', index=False)
-
-        with atomic_write(out+'/summary.txt', overwrite=True) as ofile:
-            for s in summary:
-                print(s)
-                ofile.write(s+'\n')
+            num_hitting = genome_bin['times_gene_hit'].values
+            summary.append('{} bins were reported for >50% of genes'.format(np.sum(num_hitting > num_gene*0.5)))
+            summary.append('{} bins were reported for >25% of genes'.format(np.sum(num_hitting > num_gene*0.25)))
+            summary.append('{} bins were reported for >10% of genes'.format(np.sum(num_hitting > num_gene*0.1)))
 
 
-        output_content = resource_string(__name__, 'output.md')
-        with atomic_write(out+'/README.md', overwrite=True) as ofile:
-                ofile.write(bytes.decode(output_content))
 
-        end = datetime.datetime.now()
+            with atomic_write(out+'/genome_bin.tsv', overwrite=True) as ofile:
+                ofile.write('# Genome_bin from GMGC-Finder v{}\n'.format(__version__))
+                genome_bin.to_csv(ofile, sep='\t', index=False)
 
-        run_metadata = {}
+            with atomic_write(out+'/hit_table.tsv', overwrite=True) as ofile:
+                ofile.write('# Results from GMGC-Finder v{}\n'.format(__version__))
+                hit_table.to_csv(ofile, sep='\t', index=False)
 
-        run_metadata['Command_line'] = command_line
-        run_metadata['GMGC-Finder'] = __version__
-        run_metadata['Start time'] = str(start)
-        run_metadata['End time'] = str(end)
-        run_metadata['Run time'] = (end-start).seconds
-        run_metadata['Inputs'] = []
+            with atomic_write(out+'/summary.txt', overwrite=True) as ofile:
+                for s in summary:
+                    print(s)
+                    ofile.write(s+'\n')
 
-        if args.genome_fasta is not None:
-            run_metadata['Inputs'].append(
-                    {'genome_input': input_metadata(args.genome_fasta) })
-        if args.nt_input is not None:
-            run_metadata['Inputs'].append(
-                    {'nt_input': input_metadata(args.nt_input)})
-        if args.aa_input is not None:
-            run_metadata['Inputs'].append(
-                    {'aa_input': input_metadata(args.aa_input)})
 
-        with atomic_write(out+'/runlog.yaml',overwrite=True) as ofile:
-            yaml.dump(run_metadata, ofile, default_flow_style=False)
+            output_content = resource_string(__name__, 'output.md')
+            with atomic_write(out+'/README.md', overwrite=True) as ofile:
+                    ofile.write(bytes.decode(output_content))
+
+            end = datetime.datetime.now()
+
+            run_metadata = {}
+
+            run_metadata['Command_line'] = command_line
+            run_metadata['GMGC-Finder'] = __version__
+            run_metadata['Start time'] = str(start)
+            run_metadata['End time'] = str(end)
+            run_metadata['Run time'] = (end-start).seconds
+            run_metadata['Inputs'] = []
+
+            if args.genome_fasta is not None:
+                run_metadata['Inputs'].append(
+                        {'genome_input': input_metadata(args.genome_fasta) })
+            if args.nt_input is not None:
+                run_metadata['Inputs'].append(
+                        {'nt_input': input_metadata(args.nt_input)})
+            if args.aa_input is not None:
+                run_metadata['Inputs'].append(
+                        {'aa_input': input_metadata(args.aa_input)})
+
+            with atomic_write(out+'/runlog.yaml',overwrite=True) as ofile:
+                yaml.dump(run_metadata, ofile, default_flow_style=False)
+        except Exception as e:
+            sys.stderr.write('GMGC-finder Error: ')
+            sys.stderr.write(str(e))
+            sys.stderr.write('\n')
+            sys.exit(1)
 
 
 

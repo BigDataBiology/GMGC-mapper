@@ -23,9 +23,9 @@ available for genome mode.
 
 * `-o/--output`: Output directory (will be created if non-existent).
 
-* `--nt_input`: path to the input DNA gene file(.fasta/.gz/.bz2).
+* `--nt-genes`: path to the input DNA gene file(.fasta/.gz/.bz2).
 
-* `--aa_input`: path to the input Protein gene file(.fasta/.gz/.bz2).
+* `--aa-genes`: path to the input Protein gene file(.fasta/.gz/.bz2).
 
 ## Examples
 
@@ -38,14 +38,14 @@ gmgc-finder -i input.fasta -o output
 2. Input is DNA/protein gene sequences
 
 ```bash
-gmgc-finder --nt_input genes.fna --aa_input genes.faa -o output
+gmgc-finder --nt-genes genes.fna --aa-genes genes.faa -o output
 ```
 
 The nucleotide input is optional (but should be used if available so that the
 quality of the hits can be refined):
 
 ```bash
-gmgc-finder --aa_input genes.faa -o output
+gmgc-finder --aa-genes genes.faa -o output
 ```
 
 If yout input is a metagenome, you can use
