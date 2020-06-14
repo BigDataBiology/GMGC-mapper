@@ -208,19 +208,16 @@ def gene_num(gene):
 
 
 def query_genome_bin(hit_table):
+    from collections import Counter
     hit_gene_id = hit_table['gene_id'].tolist()
-    genome_bin_dict = {}
+    gmbc_counts = Counter()
     for gene_id in hit_gene_id:
         genome_bin = requests.get(
                 f'{GMGC_API_BASE_URL}/unigene/{gene_id}/genome_bins',
                 headers=USER_AGENT_HEADER)
         genome_bin = json.loads(bytes.decode(genome_bin.content))['genome_bins']
-        for bin in genome_bin:
-            if bin not in genome_bin_dict:
-                genome_bin_dict[bin] = 1
-            else:
-                genome_bin_dict[bin] += 1
-    genome_bin = pd.DataFrame.from_dict(genome_bin_dict,orient='index',columns=['times_gene_hit'])
+        gmbc_counts.update(genome_bin)
+    genome_bin = pd.DataFrame.from_dict(gmbc_counts, orient='index', columns=['times_gene_hit'])
     genome_bin = genome_bin.reset_index().rename(columns={'index':'genome_bin'})
     return genome_bin
 
