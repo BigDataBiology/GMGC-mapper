@@ -77,7 +77,7 @@ def gene_prediction(fasta_input,output):
 
     print('\nGene prediction done.\n')
 
-def split_file(gene_path,output_dir,is_dna,max_size = 50):
+def split_file(fapath, output_dir, is_dna, max_size = 50):
     def split(handle):
         split_fasta = []
         records = list(SeqIO.parse(handle, "fasta"))
@@ -113,23 +113,20 @@ def split_file(gene_path,output_dir,is_dna,max_size = 50):
                 SeqIO.write(split_fasta, output_dir + '/split_{}.faa'.format(index), 'fasta')
         return index
 
-    if not os.path.exists(gene_path):
-        raise Exception("Not exist the file!")
+    if not os.path.exists(fapath):
+        raise Exception(f"File '{fapath}' not found")
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    if os.path.splitext(gene_path)[1] == '.gz':
-        with gzip.open(gene_path, "rt") as handle:
-            index = split(handle)
-            return index
+    if os.path.splitext(fapath)[1] == '.gz':
+        with gzip.open(fapath, "rt") as handle:
+            return split(handle)
 
-    if os.path.splitext(gene_path)[1] == '.bz2':
-        with bz2.open(gene_path, "rt") as handle:
-            index = split(handle)
-            return index
+    if os.path.splitext(fapath)[1] == '.bz2':
+        with bz2.open(fapath, "rt") as handle:
+            return split(handle)
 
-    index = split(gene_path)
-    return index
+    return split(fapath)
 
 
 
