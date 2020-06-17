@@ -69,9 +69,13 @@ def gene_prediction(fasta_input, output, tmpdirname):
 
     if os.path.splitext(fasta_input)[1] == '.bz2':
         with bz2.BZ2File(fasta_input) as ifile:
-            open(tmpdirname + '/input.fasta', "wb+").write(output_file.read())
+            open(tmpdirname + '/input.fasta', "wb+").write(ifile.read())
         fasta_input = tmpdirname + '/input.fasta'
 
+    if os.path.splitext(fasta_input)[1] == '.gz':
+        with bz2.BZ2File(fasta_input) as ifile:
+            open(tmpdirname + '/input.fasta', "wb+").write(ifile.read())
+        fasta_input = tmpdirname + '/input.fasta'
 
     subprocess.check_call(
             ['prodigal',
