@@ -274,7 +274,7 @@ def main(args=None):
     with tempfile.TemporaryDirectory() as tmpdirname:
         try:
             if args.genome_fasta is not None:
-                gene_prediction(args.genome_fasta, out, tmdirdname)
+                gene_prediction(args.genome_fasta, out, tmpdirname)
 
                 split_file(out + '/prodigal_out.faa',
                                        output_dir=tmpdirname + '/split_file',is_dna=False)
