@@ -20,16 +20,16 @@ import yaml
 import numpy as np
 from atomicwrites import atomic_write
 from .alignment import identity_coverage
-from .gmgc_finder_version import __version__
+from .gmgc_mapper_version import __version__
 
 GMGC_API_BASE_URL = 'http://gmgc.embl.de/api/v1.0'
 USER_AGENT_HEADER = {
-        'User-Agent': 'GMGC-finder v{}'.format(__version__)
+        'User-Agent': 'GMGC-mapper v{}'.format(__version__)
         }
 
 def parse_args(args):
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-                                     description='GMGC-Finder')
+                                     description='GMGC-mapper')
     parser.add_argument('-i', '--input',required=False,help = 'Path to the input genome FASTA file.',dest='genome_fasta',
                         default = None)
     parser.add_argument('-o', '--output',
@@ -53,13 +53,13 @@ def validate_args(args):
     def expect_file(f):
         if f is not None:
             if not os.path.exists(f):
-                sys.stderr.write(f"GMGC-finder Error: Expected file '{f}' does not exist\n")
+                sys.stderr.write(f"GMGC-mapper Error: Expected file '{f}' does not exist\n")
                 sys.exit(1)
     expect_file(args.genome_fasta)
     expect_file(args.aa_input)
     expect_file(args.nt_input)
     if args.genome_fasta is None and args.aa_input is None:
-        sys.stderr.write("GMGC-finder Error: At least one of --input or --aa-genes is necessary\n")
+        sys.stderr.write("GMGC-mapper Error: At least one of --input or --aa-genes is necessary\n")
         sys.stderr.exit(1)
 
 def gene_prediction(fasta_input, output, tmpdirname):
@@ -160,7 +160,7 @@ def query_gmgc(fasta_file,max_try = 10):
                     data=parameter,
                     files=fasta)
         except Exception:
-            print('GMGC-Finder query failed {} times!'.format(try_index+1))
+            print('GMGC-mapper query failed {} times!'.format(try_index+1))
             time.sleep(60)
         else:
             return besthit
@@ -249,7 +249,7 @@ def input_metadata(fpath):
 
 
 def convert_command(command):
-    command_line = 'gmgc-finder '
+    command_line = 'gmgc-mapper '
     for parameter in command:
         if command[parameter] is not None:
             command_line = command_line + '-'+ parameter + ' '
@@ -314,7 +314,7 @@ def main(args=None):
 
 
             summary = []
-            summary.append('*'*30+'GMGC-Finder results summary table'+'*'*30)
+            summary.append('*'*30+'GMGC-mapper results summary table'+'*'*30)
             summary.append('- Processed {} genes'.format(num_gene))
             match_result = hit_table['align_category'].value_counts().to_dict()
             if 'EXACT' in match_result:
@@ -343,7 +343,7 @@ def main(args=None):
 
             genome_bin = query_genome_bin(hit_table)
             genome_bin = genome_bin.sort_values('times_gene_hit',ascending=False)
-            summary.append('\n\n'+'*' * 30 + 'GMGC-Finder results genome_bin summary' + '*' * 30+'\n')
+            summary.append('\n\n'+'*' * 30 + 'GMGC-mapper results genome_bin summary' + '*' * 30+'\n')
 
             num_hitting = genome_bin['times_gene_hit'].values
             summary.append('{} bins were reported for >50% of genes'.format(np.sum(num_hitting > num_gene*0.5)))
@@ -353,11 +353,11 @@ def main(args=None):
 
 
             with atomic_write(out+'/genome_bin.tsv', overwrite=True) as ofile:
-                ofile.write('# Genome_bin from GMGC-Finder v{}\n'.format(__version__))
+                ofile.write('# Genome_bin from GMGC-mapper v{}\n'.format(__version__))
                 genome_bin.to_csv(ofile, sep='\t', index=False)
 
             with atomic_write(out+'/hit_table.tsv', overwrite=True) as ofile:
-                ofile.write('# Results from GMGC-Finder v{}\n'.format(__version__))
+                ofile.write('# Results from GMGC-mapper v{}\n'.format(__version__))
                 hit_table.to_csv(ofile, sep='\t', index=False)
 
             with atomic_write(out+'/summary.txt', overwrite=True) as ofile:
@@ -375,7 +375,7 @@ def main(args=None):
             run_metadata = {}
 
             run_metadata['Command_line'] = command_line
-            run_metadata['GMGC-Finder'] = __version__
+            run_metadata['GMGC-mapper'] = __version__
             run_metadata['Start time'] = str(start)
             run_metadata['End time'] = str(end)
             run_metadata['Run time'] = (end-start).seconds
@@ -394,7 +394,7 @@ def main(args=None):
             with atomic_write(out+'/runlog.yaml',overwrite=True) as ofile:
                 yaml.dump(run_metadata, ofile, default_flow_style=False)
         except Exception as e:
-            sys.stderr.write('GMGC-finder Error: ')
+            sys.stderr.write('GMGC-mapper Error: ')
             sys.stderr.write(str(e))
             sys.stderr.write('\n')
             sys.exit(1)
