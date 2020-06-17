@@ -7,25 +7,16 @@ Command line tool to query the Global Microbial Gene Catalog (GMGC).
 
 ## Install
 
-Install from source
+GMGC-mapper runs on Python 3.6-3.8 and requires
+[prodigal](https://github.com/hyattpd/Prodigal) to be available for genome
+mode.
+
+### Install from source
 
 ```bash
 python setup.py install
 ```
 
-GMGC-mapper requires [prodigal](https://github.com/hyattpd/Prodigal) to be
-available for genome mode.
-
-
-## Parameters
-
-* `-i/--input`: path to the input genome file(.fasta/.gz/.bz2).
-
-* `-o/--output`: Output directory (will be created if non-existent).
-
-* `--nt-genes`: path to the input DNA gene file(.fasta/.gz/.bz2).
-
-* `--aa-genes`: path to the input Protein gene file(.fasta/.gz/.bz2).
 
 ## Examples
 
@@ -65,4 +56,14 @@ The output folder will contain
 For more details, [read the
 docs](https://gmgc-mapper.readthedocs.io/en/latest/output/). A description of
 the outputs is also written to output folder for convenience.
+
+## Parameters
+
+* `-i/--input`: path to the input genome file(.fasta/.gz/.bz2).
+
+* `-o/--output`: Output directory (will be created if non-existent).
+
+* `--nt-genes`: path to the input DNA gene file(.fasta/.gz/.bz2).
+
+* `--aa-genes`: path to the input Protein gene file(.fasta/.gz/.bz2).
 
