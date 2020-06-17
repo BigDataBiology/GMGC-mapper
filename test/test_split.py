@@ -1,4 +1,4 @@
-from gmgc_finder.main import split_file
+from gmgc_mapper.main import split_file
 from os import path
 import pytest
 

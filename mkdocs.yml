@@ -1,8 +1,8 @@
-site_name: "GMGC-Finder"
+site_name: "GMGC-mapper"
 repo_url: "https://github.com/psj1997/GMGC-Finder"
 
 nav:
-        - 'GMGC-Finder': index.md
+        - 'GMGC-mapper': index.md
         - 'Install': install.md
         - 'Usage': usage.md
         - 'Output' : output.md

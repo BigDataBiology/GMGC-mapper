@@ -1,6 +1,6 @@
-# GMGC-Finder
+# GMGC-mapper
 
-GMGC-Finder is a command line tool to query input genome to the Global
+GMGC-mapper is a command line tool to query input genome to the Global
 Microbial Gene Catalog (GMGC). It will return the summary of  alignment
 categories and genome bins.
 

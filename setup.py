@@ -1,8 +1,8 @@
 from os import path
 from setuptools import setup,find_packages
 
-exec(compile(open('gmgc_finder/gmgc_finder_version.py').read(),
-             'gmgc_finder/gmgc_finder_version.py', 'exec'))
+exec(compile(open('gmgc_mapper/gmgc_mapper_version.py').read(),
+             'gmgc_mapper/gmgc_mapper_version.py', 'exec'))
 
 
 try:
@@ -11,7 +11,7 @@ except:
     long_description = open('README.md').read()
 
 
-setup(name='GMGC-Finder',
+setup(name='GMGC-mapper',
       version=__version__,
       description='Map genes and genome to the Global Microbial Gene Catalog (GMGC)',
       long_description = long_description,
@@ -22,11 +22,11 @@ setup(name='GMGC-Finder',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
       ],
-      url='https://github.com/psj1997/GMGC_Finder',
+      url='https://github.com/psj1997/GMGC_mapper',
       author='Shaojun Pan',
       author_email='shaojun1997777@gmail.com',
       license='MIT',
-      packages=['gmgc_finder'],
+      packages=['gmgc_mapper'],
       install_requires=[
           # Technically, numpy is not directly needed, but some downstream
           # dependencies use it and fail to declare they need it:
@@ -38,9 +38,9 @@ setup(name='GMGC-Finder',
           'atomicwrites',
       ],
       package_data={
-             'gmgc_finder': ['*.md']},
+             'gmgc_mapper': ['*.md']},
       zip_safe=False,
       entry_points={
-            'console_scripts': ['gmgc-finder=gmgc_finder.main:main'],
+            'console_scripts': ['gmgc-mapper=gmgc_mapper.main:main'],
       }
       )

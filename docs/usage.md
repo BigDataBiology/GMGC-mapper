@@ -17,25 +17,25 @@ The input must contain a genome file or DNA and Protein gene file or just Protei
 1. Input is a genome sequence (`input.fasta`).
 
 ```bash
-gmgc-finder -i input.fasta -o output
+gmgc-mapper -i input.fasta -o output
 ```
 
-GMGC-finder will call `prodigal` to predict genes and then process each gene.
+GMGC-mapper will call `prodigal` to predict genes and then process each gene.
 
 2. Input is DNA/protein gene sequences (`genes.fna` and `genes.faa`,
    respectfully).
 
 ```bash
-gmgc-finder --nt-genes genes.fna --aa-genes genes.faa -o output
+gmgc-mapper --nt-genes genes.fna --aa-genes genes.faa -o output
 ```
 ```bash
-gmgc-finder --aa-genes genes.faa -o output
+gmgc-mapper --aa-genes genes.faa -o output
 ```
 # Processing metagenomes using NGLess
 
 If your input is metagenome, you can use
 [NGLess](https://github.com/ngless-toolkit/ngless) for assembly and gene
-prediction and, then, pass the results to GMGC-finder.
+prediction and, then, pass the results to GMGC-mapper.
 
 
 ## Install

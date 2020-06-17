@@ -1,10 +1,10 @@
-# Output of GMGC-finder
+# Output of GMGC-mapper
 
 Explanation of the files in the output directory
 
 ## Prodigal output
 
-These three files are the output of prodigal (if GMGC-finder was called in
+These three files are the output of prodigal (if GMGC-mapper was called in
 genome mode)
 
 - `prodigal_out.faa` protein sequence
@@ -55,7 +55,7 @@ The file `summary.txt` provides a human-readable summary of the results, while
 `runlog.yaml` is a summary of run metadata (as a YaML file, it is both machine
 and human-readable).
 
-The file `summary.txt` should be reproducible and running GMGC-finder twice on
+The file `summary.txt` should be reproducible and running GMGC-mapper twice on
 the same input should produce the same results. By design, though,
 `runglog.yaml` includes information such as the time when the analysis was run
 which is not reproducible.
