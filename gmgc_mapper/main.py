@@ -251,26 +251,20 @@ def input_metadata(fpath):
             'sha256': sha256sum(fpath)
             }
 
-
-def convert_command(command):
-    command_line = 'gmgc-mapper '
-    for parameter in command:
-        if command[parameter] is not None:
-            command_line = command_line + '-'+ parameter + ' '
-            command_line = command_line + command[parameter] + ' '
-    return command_line
-
 def main(args=None):
+    import shlex
 
     start = datetime.datetime.now()
 
     if args is None:
         args = sys.argv
+
+    # Save it for later
+    command_line = ' '.join([shlex.quote(a) for a in args])
+
     args = parse_args(args)
     validate_args(args)
 
-    command_args = vars(args)
-    command_line = convert_command(command_args)
     out = args.output
     if not os.path.exists(out):
         os.makedirs(out)
@@ -380,6 +374,7 @@ def main(args=None):
 
             run_metadata['Command_line'] = command_line
             run_metadata['GMGC-mapper'] = __version__
+            run_metadata['Working directory'] = os.getcwd()
             run_metadata['Start time'] = str(start)
             run_metadata['End time'] = str(end)
             run_metadata['Run time'] = (end-start).seconds
