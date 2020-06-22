@@ -19,7 +19,7 @@ The results of the queries to the GMGC.
 There are five columns in the file.
 
 - `query_name`: the name/id of the input gene
-- `gene_id`: the Unigene with the best score in the GMGC
+- `unigene_id`: the Unigene with the best score in the GMGC
 - `align_category: there are four different classes of alignment (see below)
 - `gene_dna`: the DNA sequence of the best hit in GMGC
 - `gene_protein`: the protein sequence of the best hit in GMGC
@@ -43,7 +43,7 @@ contained in them).
 There are two columns in the file.
 
 - `genome_bin`: the name of genome bins in GMGC
-- `times_gene_hit`: the times of input genes hitting it 
+- `nr_hits`: the times of input genes hitting it
 
 Note while not all GMGC unigenes are contained in a genome bin, some are
 contained in many. Thus, the total counts will not (except by coincidence)
