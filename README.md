@@ -1,6 +1,7 @@
 # GMGC-mapper
 
 [![Install with conda](https://anaconda.org/bioconda/gmgc-mapper/badges/installer/conda.svg)](https://conda.anaconda.org/bioconda)
+[![PyPI version](https://badge.fury.io/py/GMGC-mapper.svg)](https://badge.fury.io/py/GMGC-mapper)
 ![gmgc_mapper_test](https://github.com/BigDataBiology/GMGC-Finder/workflows/gmgc_mapper_test/badge.svg)
 [![Number of downloads](https://anaconda.org/bioconda/gmgc-mapper/badges/downloads.svg)](https://anaconda.org/bioconda/gmgc-mapper)
 [![License: MIT](https://anaconda.org/bioconda/gmgc-mapper/badges/license.svg)](https://anaconda.org/bioconda/gmgc-mapper)
@@ -14,7 +15,31 @@ GMGC-mapper runs on Python 3.6-3.8 and requires
 [prodigal](https://github.com/hyattpd/Prodigal) to be available for genome
 mode.
 
+### Conda install
+
+The easiest way to install GMGC-mapper is through bioconda, which will ensure
+all dependencies (including `prodigal`) are installed automatically:
+
+```bash
+conda install -c bioconda gmgc-mapper
+```
+
+### pip install
+
+Alternatively, `GMGC-mapper` is available from PyPI, so can be installed
+through pip:
+
+```bash
+pip install GMGC-mapper
+```
+
+Note that this does not install `prodigal` (which is necessary for the
+genome-based workflow).
+
 ### Install from source
+
+Finally, especially if you are retrieving the cutting edge version from Github,
+you can install with the standard
 
 ```bash
 python setup.py install
