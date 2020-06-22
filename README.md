@@ -1,6 +1,9 @@
 # GMGC-mapper
 
+[![Install with conda](https://anaconda.org/bioconda/gmgc-mapper/badges/installer/conda.svg)](https://conda.anaconda.org/bioconda)
 ![gmgc_mapper_test](https://github.com/BigDataBiology/GMGC-Finder/workflows/gmgc_mapper_test/badge.svg)
+[![Number of downloads](https://anaconda.org/bioconda/gmgc-mapper/badges/downloads.svg)](https://anaconda.org/bioconda/gmgc-mapper)
+[![License: MIT](https://anaconda.org/bioconda/gmgc-mapper/badges/license.svg)](https://anaconda.org/bioconda/gmgc-mapper)
 
 
 Command line tool to query the Global Microbial Gene Catalog (GMGC).
