@@ -181,7 +181,7 @@ def realignment(dna_path,aa_path,besthit):
             query_aa = str(record_aa.seq)
             query_name = hit_index['query_name']
             if hit_index['hits'] != []:
-                hit_gene_id = hit_index['hits'][0]['gene_id']
+                hit_gene_id = hit_index['hits'][0]['unigene_id']
                 target_dna = hit_index['hits'][0]['dna_sequence']
                 target_aa =  hit_index['hits'][0]['protein_sequence']
                 if target_aa and target_dna is not None:
@@ -222,15 +222,15 @@ def gene_num(gene):
 
 def query_genome_bin(hit_table):
     from collections import Counter
-    hit_gene_id = hit_table['gene_id'].tolist()
+    hit_gene_id = hit_table['unigene_id'].tolist()
     gmbc_counts = Counter()
-    for gene_id in hit_gene_id:
+    for unigene_id in hit_gene_id:
         genome_bin = requests.get(
-                f'{GMGC_API_BASE_URL}/unigene/{gene_id}/genome_bins',
+                f'{GMGC_API_BASE_URL}/unigene/{unigene_id}/genome_bins',
                 headers=USER_AGENT_HEADER)
         genome_bin = json.loads(bytes.decode(genome_bin.content))['genome_bins']
         gmbc_counts.update(genome_bin)
-    genome_bin = pd.DataFrame.from_dict(gmbc_counts, orient='index', columns=['times_gene_hit'])
+    genome_bin = pd.DataFrame.from_dict(gmbc_counts, orient='index', columns=['nr_hits'])
     genome_bin = genome_bin.reset_index().rename(columns={'index':'genome_bin'})
     return genome_bin
 
@@ -307,7 +307,7 @@ def main(args=None):
                         hit_table_index = realignment(None,tmpdirname+'/split_file/split_{}.faa'.format(index+1),besthit)
                     hit_table.extend(hit_table_index)
             hit_table = pd.DataFrame(hit_table)
-            hit_table.columns = ['query_name','gene_id','align_category','gene_dna','gene_protein']
+            hit_table.columns = ['query_name','unigene_id','align_category','gene_dna','gene_protein']
             num_gene = hit_table.shape[0]
 
 
@@ -340,10 +340,10 @@ def main(args=None):
 
 
             genome_bin = query_genome_bin(hit_table)
-            genome_bin = genome_bin.sort_values('times_gene_hit',ascending=False)
+            genome_bin = genome_bin.sort_values('nr_hits',ascending=False)
             summary.append('\n\n'+'*' * 30 + 'GMGC-mapper results genome_bin summary' + '*' * 30+'\n')
 
-            num_hitting = genome_bin['times_gene_hit'].values
+            num_hitting = genome_bin['nr_hits'].values
             summary.append('{} bins were reported for >50% of genes'.format(np.sum(num_hitting > num_gene*0.5)))
             summary.append('{} bins were reported for >25% of genes'.format(np.sum(num_hitting > num_gene*0.25)))
             summary.append('{} bins were reported for >10% of genes'.format(np.sum(num_hitting > num_gene*0.1)))
