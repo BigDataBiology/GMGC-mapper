@@ -1,8 +1,9 @@
 site_name: "GMGC-mapper"
-repo_url: "https://github.com/psj1997/GMGC-Finder"
+repo_url: "https://github.com/BigDataBiology/GMGC-mapper"
 
 nav:
         - 'GMGC-mapper': index.md
         - 'Install': install.md
         - 'Usage': usage.md
         - 'Output' : output.md
+        - 'History' : whatsnew.md
