@@ -370,15 +370,15 @@ def main(args=None):
 
             end = datetime.datetime.now()
 
-            run_metadata = {}
-
-            run_metadata['Command_line'] = command_line
-            run_metadata['GMGC-mapper'] = __version__
-            run_metadata['Working directory'] = os.getcwd()
-            run_metadata['Start time'] = str(start)
-            run_metadata['End time'] = str(end)
-            run_metadata['Run time'] = (end-start).seconds
-            run_metadata['Inputs'] = []
+            run_metadata = {
+                'Command_line': command_line,
+                'GMGC-mapper': __version__,
+                'Working directory': os.getcwd(),
+                'Start time': str(start),
+                'End time': str(end),
+                'Run time': (end-start).seconds,
+                'Inputs': [],
+            }
 
             if args.genome_fasta is not None:
                 run_metadata['Inputs'].append(
