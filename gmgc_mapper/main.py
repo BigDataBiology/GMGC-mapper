@@ -174,6 +174,7 @@ def query_gmgc(fasta_file,max_try = 10):
 def realignment(dna_path,aa_path,besthit):
     def alignment(record_dna,record_aa,hit_index,dna = False):
             hit_result = []
+            gene_origin = []
             if dna == True:
                 query_dna = str(record_dna.seq)
             else:
@@ -185,25 +186,38 @@ def realignment(dna_path,aa_path,besthit):
                 target_dna = hit_index['hits'][0]['dna_sequence']
                 target_aa =  hit_index['hits'][0]['protein_sequence']
                 if target_aa and target_dna is not None:
+                    samples = requests.get(
+                        '{0}/unigene/{1}/samples'.format(GMGC_API_BASE_URL,hit_gene_id),
+                    )
+                    samples = json.loads(bytes.decode(samples.content))['samples']
+                    for sample in samples:
+                        sample_inf = requests.get(
+                        '{0}/sample/{1}'.format(GMGC_API_BASE_URL,sample),
+                    )
+                        sample_inf = json.loads(bytes.decode(sample_inf.content))
+                        gene_origin.append([hit_gene_id,sample,sample_inf['longitude'],sample_inf['latitude'],sample_inf['habitat']])
                     realign_result = identity_coverage(query_dna,query_aa,target_dna,target_aa)
                     hit_result.extend([query_name,hit_gene_id,realign_result,target_dna,target_aa])
                 else:
                     hit_result.extend([query_name, None, 'NO HIT', None, None])
-            return hit_result
+            return hit_result , gene_origin
 
     results = []
+    gene_information = []
     if dna_path is not None:
         for record_dna, record_aa, hit_index in zip(SeqIO.parse(dna_path,'fasta'),
                                                     SeqIO.parse(aa_path,'fasta'),
                                                     besthit):
-            hit_result = alignment(record_dna,record_aa,hit_index,dna = True)
+            hit_result, gene_origin= alignment(record_dna,record_aa,hit_index,dna = True)
             results.append(hit_result)
+            gene_information.extend(gene_origin)
     else:
         for  record_aa, hit_index in zip(SeqIO.parse(aa_path,'fasta'),
                                                     besthit):
-            hit_result = alignment('',record_aa,hit_index,dna=False)
+            hit_result,gene_origin = alignment('',record_aa,hit_index,dna=False)
             results.append(hit_result)
-    return results
+            gene_information.extend(gene_origin)
+    return results,gene_information
 
 def gene_num(gene):
     """
@@ -295,19 +309,24 @@ def main(args=None):
                     num_split = split_file(args.aa_input,
                                            output_dir=tmpdirname + '/split_file',is_dna=False)
             hit_table = []
+            gene_table = []
             print('Starting GMGC queries (total: {} batches to process)'.format(num_split))
             for index in tqdm(range(num_split)):
                 besthit = query_gmgc(tmpdirname+'/split_file/split_{}.faa'.format(index+1))
                 if besthit is not None:
                     besthit = json.loads(bytes.decode(besthit.content))['results']
                     if args.nt_input is not None:
-                        hit_table_index = realignment(tmpdirname+'/split_file/split_{}.fna'.format(index+1),
+                        hit_table_index,gene_inf = realignment(tmpdirname+'/split_file/split_{}.fna'.format(index+1),
                                                       tmpdirname+'/split_file/split_{}.faa'.format(index+1),besthit)
                     else:
-                        hit_table_index = realignment(None,tmpdirname+'/split_file/split_{}.faa'.format(index+1),besthit)
+                        hit_table_index,gene_inf = realignment(None,tmpdirname+'/split_file/split_{}.faa'.format(index+1),besthit)
                     hit_table.extend(hit_table_index)
+                    gene_table.extend(gene_inf)
             hit_table = pd.DataFrame(hit_table)
             hit_table.columns = ['query_name','unigene_id','align_category','gene_dna','gene_protein']
+
+            gene_table = pd.DataFrame(gene_table)
+            gene_table.columns = ['unigene_id','sample','longitude','latitude','habitat']
             num_gene = hit_table.shape[0]
 
 
@@ -357,6 +376,11 @@ def main(args=None):
             with atomic_write(out+'/hit_table.tsv', overwrite=True) as ofile:
                 ofile.write('# Results from GMGC-mapper v{}\n'.format(__version__))
                 hit_table.to_csv(ofile, sep='\t', index=False)
+
+
+            with atomic_write(out+'/gene_table.tsv', overwrite=True) as ofile:
+                ofile.write('# Gene information from GMGC-mapper v{}\n'.format(__version__))
+                gene_table.to_csv(ofile, sep='\t', index=False)
 
             with atomic_write(out+'/summary.txt', overwrite=True) as ofile:
                 for s in summary:
