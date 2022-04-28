@@ -40,7 +40,7 @@ prediction and, then, pass the results to GMGC-mapper.
 
 ## Install
 
-The recommended way to install NGLess is through [bioconda](http://bioconda.github.io/):
+The recommended way to install NGLess is through [bioconda](https://bioconda.github.io/):
 
 ```
 conda install -c bioconda ngless 

@@ -6,12 +6,20 @@
 [![Number of downloads](https://anaconda.org/bioconda/gmgc-mapper/badges/downloads.svg)](https://anaconda.org/bioconda/gmgc-mapper)
 [![License: MIT](https://anaconda.org/bioconda/gmgc-mapper/badges/license.svg)](https://anaconda.org/bioconda/gmgc-mapper)
 
+## CITATION
+
+If you use results from this tool, please cite
+
+> Coelho, L.P., Alves, R., del Río, Á.R. et al. Towards the biogeography of
+> prokaryotic genes. Nature 601, 252–256 (2022).
+> [https://doi.org/10.1038/s41586-021-04233-4](DOI: 10.1038/s41586-021-04233-4)
+
 
 Command line tool to query the Global Microbial Gene Catalog (GMGC).
 
 ## Install
 
-GMGC-mapper runs on Python 3.6-3.8 and requires
+GMGC-mapper runs on Python 3.6-3.10 and requires
 [prodigal](https://github.com/hyattpd/Prodigal) to be available for genome
 mode.
 
