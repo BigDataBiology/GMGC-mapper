@@ -29,7 +29,10 @@ USER_AGENT_HEADER = {
 def parse_args(args):
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                                      description='GMGC-mapper')
-    parser.add_argument('-i', '--input',required=False,help = 'Path to the input genome FASTA file.',dest='genome_fasta',
+    parser.add_argument('-i', '--input',
+                        required=False,
+                        help='Path to the input genome FASTA file.',
+                        dest='genome_fasta',
                         default = None)
     parser.add_argument('-o', '--output',
                         required=True,
