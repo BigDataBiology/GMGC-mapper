@@ -19,6 +19,8 @@ import time
 import yaml
 import numpy as np
 from atomicwrites import atomic_write
+
+from .fasta import fasta_iter
 from .alignment import identity_coverage
 from .gmgc_mapper_version import __version__
 
@@ -219,19 +221,11 @@ def realignment(dna_path,aa_path,besthit):
             gene_information.extend(gene_origin)
     return results,gene_information
 
-def gene_num(gene):
+def number_seqs_fafile(fafile):
     """
     return the number of sequence in a file(fasta, .gz , .bz2)
     """
-    if os.path.splitext(gene)[1] == '.gz':
-        with gzip.open(gene, "rt") as handle:
-            return len(list(SeqIO.parse(handle, "fasta")))
-
-    if os.path.splitext(gene)[1] == '.bz2':
-        with bz2.open(gene, "rt") as handle:
-            return len(list(SeqIO.parse(handle, "fasta")))
-
-    return len(list(SeqIO.parse(gene, "fasta")))
+    return len(_ for _ in fasta_iter(fafile))
 
 
 def query_genome_bin(hit_table):
@@ -294,8 +288,8 @@ def main(args=None):
                                        output_dir=tmpdirname + '/split_file',is_dna=True)
             else:
                 if args.nt_input is not None:
-                    n_nt = gene_num(args.nt_input)
-                    n_aa = gene_num(args.aa_input)
+                    n_nt = number_seqs_fafile(args.nt_input)
+                    n_aa = number_seqs_fafile(args.aa_input)
                     if n_nt != n_aa:
                         sys.stderr.write("Input DNA and amino acide gene files must have the same sequence number!\n")
                         sys.stderr.write(f"DNA file has {n_nt} while amino acid file has {n_aa}!")

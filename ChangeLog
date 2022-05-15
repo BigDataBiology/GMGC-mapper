@@ -1,3 +1,7 @@
+Unreleased
+	* Refactor fasta parsing (add .xz support)
+	* Add IPython outputs
+
 Version 0.2.0 2020-09-03
 	* Print out command line exactly & working dir in runlog
 	* Update to newer API version

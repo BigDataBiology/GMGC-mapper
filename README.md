@@ -95,11 +95,11 @@ the outputs is also written to output folder for convenience.
 
 ## Parameters
 
-* `-i/--input`: path to the input genome file(.fasta/.gz/.bz2).
+* `-i/--input`: path to the input genome file (FASTA, possibly .gz/.bz2/.xz compressed).
 
 * `-o/--output`: Output directory (will be created if non-existent).
 
-* `--nt-genes`: path to the input DNA gene file(.fasta/.gz/.bz2).
+* `--nt-genes`: path to the input DNA gene file (FASTA, possibly .gz/.bz2/.xz compressed).
 
-* `--aa-genes`: path to the input Protein gene file(.fasta/.gz/.bz2).
+* `--aa-genes`: path to the input Protein gene file (FASTA, possibly .gz/.bz2/.xz compressed).
 
