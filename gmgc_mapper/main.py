@@ -1,8 +1,5 @@
 import argparse
 import sys
-from Bio import SeqIO
-from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
 import os
 import requests
 import pandas as pd
@@ -95,65 +92,38 @@ def gene_prediction(fasta_input, output, tmpdirname):
 
     print('\nGene prediction done.\n')
 
-def split_file(fapath, output_dir, is_dna, max_size = 50):
-    def split(handle):
-        split_fasta = []
-        records = list(SeqIO.parse(handle, "fasta"))
-        index = 0
-        if len(records) >= max_size:
-            num_seq = 0
-            for seq_record in records:
-                rec1 = SeqRecord(Seq(str(seq_record.seq)), id=seq_record.id, description='')
-                split_fasta.append(rec1)
-                num_seq += 1
-                if num_seq == max_size:
-                    num_seq = 0
-                    index += 1
-                    if is_dna is True:
-                        SeqIO.write(split_fasta, output_dir + '/split_{}.fna'.format(index), 'fasta')
-                    else:
-                        SeqIO.write(split_fasta, output_dir + '/split_{}.faa'.format(index), 'fasta')
-                    split_fasta = []
-            if split_fasta != []:
-                index += 1
-                if is_dna is True:
-                    SeqIO.write(split_fasta, output_dir + '/split_{}.fna'.format(index), 'fasta')
-                else:
-                    SeqIO.write(split_fasta, output_dir + '/split_{}.faa'.format(index), 'fasta')
-        else:
-            index += 1
-            for seq_record in records:
-                rec1 = SeqRecord(Seq(str(seq_record.seq)), id=seq_record.id, description='')
-                split_fasta.append(rec1)
-            if is_dna is True:
-                SeqIO.write(split_fasta, output_dir + '/split_{}.fna'.format(index), 'fasta')
-            else:
-                SeqIO.write(split_fasta, output_dir + '/split_{}.faa'.format(index), 'fasta')
-        return index
 
+def split_chunks(lst, chunksize):
+    '''
+    Split list into chunks
+    '''
+    ch = []
+    for e in lst:
+        ch.append(e)
+        if len(ch) >= chunksize:
+            yield ch
+            ch = []
+    if ch:
+        yield ch
+
+def split_file(fapath, output_dir, is_dna, max_size = 50):
     if not os.path.exists(fapath):
         raise Exception(f"File '{fapath}' not found")
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-
-    if os.path.splitext(fapath)[1] == '.gz':
-        with gzip.open(fapath, "rt") as handle:
-            return split(handle)
-
-    if os.path.splitext(fapath)[1] == '.bz2':
-        with bz2.open(fapath, "rt") as handle:
-            return split(handle)
-
-    return split(fapath)
-
-
+    ext = ('fna' if is_dna else 'faa')
+    for index, chunk in enumerate(split_chunks(fasta_iter(fapath), max_size)):
+        with open(output_dir + f'/split_{index+1}.{ext}', 'wt') as out:
+            for h,seq in chunk:
+                out.write(f'>{h}\n{seq}\n')
+    return index + 1
 
 
 def query_gmgc(fasta_file,max_try = 10):
     if not os.path.exists(fasta_file):
         raise Exception("Missing file '{}'".format(fasta_file))
 
-    if len(list(SeqIO.parse(fasta_file, "fasta"))) == 0:
+    if fasta_is_empty(fasta_file):
         raise Exception("Input FASTA file '{}' file is empty!".format(fasta_file))
 
     for try_index in range(max_try):
@@ -173,59 +143,54 @@ def query_gmgc(fasta_file,max_try = 10):
     return None
 
 
-def realignment(dna_path,aa_path,besthit):
-    def alignment(record_dna,record_aa,hit_index,dna = False):
-            hit_result = []
-            gene_origin = []
-            if dna == True:
-                query_dna = str(record_dna.seq)
-            else:
-                query_dna = ''
-            query_aa = str(record_aa.seq)
-            query_name = hit_index['query_name']
-            if hit_index['hits'] != []:
-                hit_gene_id = hit_index['hits'][0]['unigene_id']
-                target_dna = hit_index['hits'][0]['dna_sequence']
-                target_aa =  hit_index['hits'][0]['protein_sequence']
-                if target_aa and target_dna is not None:
-                    samples = requests.get(
-                        '{0}/unigene/{1}/samples'.format(GMGC_API_BASE_URL,hit_gene_id),
-                    )
-                    samples = json.loads(bytes.decode(samples.content))['samples']
-                    for sample in samples:
-                        sample_inf = requests.get(
-                        '{0}/sample/{1}'.format(GMGC_API_BASE_URL,sample),
-                    )
-                        sample_inf = json.loads(bytes.decode(sample_inf.content))
-                        gene_origin.append([hit_gene_id,sample,sample_inf['longitude'],sample_inf['latitude'],sample_inf['habitat']])
-                    realign_result = identity_coverage(query_dna,query_aa,target_dna,target_aa)
-                    hit_result.extend([query_name,hit_gene_id,realign_result,target_dna,target_aa])
-                else:
-                    hit_result.extend([query_name, None, 'NO HIT', None, None])
-            return hit_result , gene_origin
+def alignment(query_dna, query_aa, hit_index):
+    hit_result = []
+    gene_origin = []
+    query_name = hit_index['query_name']
+    if hit_index['hits'] != []:
+        hit_gene_id = hit_index['hits'][0]['unigene_id']
+        target_dna = hit_index['hits'][0]['dna_sequence']
+        target_aa =  hit_index['hits'][0]['protein_sequence']
+        if target_aa and target_dna is not None:
+            samples = requests.get(
+                '{0}/unigene/{1}/samples'.format(GMGC_API_BASE_URL,hit_gene_id),
+            )
+            samples = json.loads(bytes.decode(samples.content))['samples']
+            for sample in samples:
+                sample_inf = requests.get(
+                '{0}/sample/{1}'.format(GMGC_API_BASE_URL,sample),
+            )
+                sample_inf = json.loads(bytes.decode(sample_inf.content))
+                gene_origin.append([hit_gene_id,sample,sample_inf['longitude'],sample_inf['latitude'],sample_inf['habitat']])
+            realign_result = identity_coverage(query_dna,query_aa,target_dna,target_aa)
+            hit_result.extend([query_name,hit_gene_id,realign_result,target_dna,target_aa])
+        else:
+            hit_result.extend([query_name, None, 'NO HIT', None, None])
+    return hit_result, gene_origin
 
+def realignment(dna_path,aa_path,besthit):
+    import itertools
     results = []
     gene_information = []
-    if dna_path is not None:
-        for record_dna, record_aa, hit_index in zip(SeqIO.parse(dna_path,'fasta'),
-                                                    SeqIO.parse(aa_path,'fasta'),
-                                                    besthit):
-            hit_result, gene_origin= alignment(record_dna,record_aa,hit_index,dna = True)
-            results.append(hit_result)
-            gene_information.extend(gene_origin)
-    else:
-        for  record_aa, hit_index in zip(SeqIO.parse(aa_path,'fasta'),
-                                                    besthit):
-            hit_result,gene_origin = alignment('',record_aa,hit_index,dna=False)
-            results.append(hit_result)
-            gene_information.extend(gene_origin)
-    return results,gene_information
+    for (_, record_dna), (_, record_aa), hit_index in zip(
+            (fasta_iter(dna_path) if dna_path is not None else itertools.repeat(('',''))),
+            fasta_iter(aa_path),
+            besthit):
+        hit_result, gene_origin = alignment(record_dna, record_aa, hit_index)
+        results.append(hit_result)
+        gene_information.extend(gene_origin)
+    return results, gene_information
 
 def number_seqs_fafile(fafile):
     """
-    return the number of sequence in a file(fasta, .gz , .bz2)
+    return the number of sequence in a FASTA file
     """
     return len(_ for _ in fasta_iter(fafile))
+
+def fasta_is_empty(fapath):
+    for _ in fasta_iter(fapath):
+        return False
+    return True
 
 
 def query_genome_bin(hit_table):

@@ -1,6 +1,14 @@
-from gmgc_mapper.main import split_file
+from gmgc_mapper.main import split_file, split_chunks
 from os import path
 import pytest
+
+def test_split_chunks():
+    import itertools
+    elems = list(range(234))
+
+    for chunk_size in [1, 4, 7, 10, 11, 243, 300]:
+        len(list(itertools.chain(*split_chunks(elems, chunk_size))))  == len(elems)
+
 
 def test_split(tmpdir):
     faa_file = path.join(tmpdir, 'input.faa')

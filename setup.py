@@ -31,7 +31,6 @@ setup(name='GMGC-mapper',
           # Technically, numpy is not directly needed, but some downstream
           # dependencies use it and fail to declare they need it:
           'numpy',
-          'Biopython',
           'scikit-bio',
           'tqdm',
           'pyyaml',
