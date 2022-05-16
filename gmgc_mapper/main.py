@@ -5,8 +5,6 @@ import requests
 import pandas as pd
 import json
 from tqdm import tqdm
-import gzip
-import bz2
 import subprocess
 from os import path
 import tempfile
@@ -65,6 +63,9 @@ def validate_args(args):
         sys.stderr.exit(1)
 
 def gene_prediction(fasta_input, output, tmpdirname):
+    import gzip
+    import bz2
+    import lzma
 
     print('Start gene prediction...')
 
@@ -76,6 +77,11 @@ def gene_prediction(fasta_input, output, tmpdirname):
 
     if os.path.splitext(fasta_input)[1] == '.gz':
         with gzip.GzipFile(fasta_input) as ifile:
+            open(tmpdirname + '/input.fasta', "wb+").write(ifile.read())
+        fasta_input = tmpdirname + '/input.fasta'
+
+    if os.path.splitext(fasta_input)[1] == '.xz':
+        with lzma.open(fasta_input, 'rb') as ifile:
             open(tmpdirname + '/input.fasta', "wb+").write(ifile.read())
         fasta_input = tmpdirname + '/input.fasta'
 
