@@ -138,7 +138,7 @@ def query_gmgc(fasta_file,max_try = 10):
     for try_index in range(max_try):
         try:
             parameter = {'mode': 'besthit', 'return_seqs': True}
-            fasta = {'fasta': open('{}'.format(fasta_file), 'rb')}
+            fasta = {'fasta': open(fasta_file, 'rb')}
             besthit = requests.post(
                     f'{GMGC_API_BASE_URL}/query/sequence',
                     headers=USER_AGENT_HEADER,
@@ -177,7 +177,7 @@ def alignment(query_dna, query_aa, hit_index):
             hit_result.extend([query_name, None, 'NO HIT', None, None])
     return hit_result, gene_origin
 
-def realignment(dna_path,aa_path,besthit):
+def realignment(dna_path, aa_path, besthit):
     import itertools
     results = []
     gene_information = []
@@ -255,27 +255,22 @@ def main(args=None):
         try:
             if args.genome_fasta is not None:
                 gene_prediction(args.genome_fasta, out, tmpdirname)
+                args.nt_input = out + '/prodigal_out.fna'
+                args.aa_input = out + '/prodigal_out.faa'
 
-                split_file(out + '/prodigal_out.faa',
-                                       output_dir=tmpdirname + '/split_file',is_dna=False)
-                num_split = split_file(out + '/prodigal_out.fna',
-                                       output_dir=tmpdirname + '/split_file',is_dna=True)
-            else:
-                if args.nt_input is not None:
-                    n_nt = number_seqs_fafile(args.nt_input)
-                    n_aa = number_seqs_fafile(args.aa_input)
-                    if n_nt != n_aa:
-                        sys.stderr.write("Input DNA and amino acide gene files must have the same sequence number!\n")
-                        sys.stderr.write(f"DNA file has {n_nt} while amino acid file has {n_aa}!")
-                        sys.exit(1)
-                    split_file(args.aa_input,
-                                           output_dir=tmpdirname + '/split_file',is_dna=False)
-                    num_split = split_file(args.nt_input,
-                                           output_dir=tmpdirname + '/split_file',is_dna=True)
+            if args.nt_input is not None:
+                n_nt = number_seqs_fafile(args.nt_input)
+                n_aa = number_seqs_fafile(args.aa_input)
+                if n_nt != n_aa:
+                    sys.stderr.write(f"The input DNA and amino acid files must have the same number of sequences!\n")
+                    sys.stderr.write(f"DNA file has {n_nt} while amino acid file has {n_aa}!")
+                    sys.exit(1)
+                split_file(args.nt_input,
+                               output_dir=tmpdirname + '/split_file',
+                               is_dna=True)
 
-                else:
-                    num_split = split_file(args.aa_input,
-                                           output_dir=tmpdirname + '/split_file',is_dna=False)
+            num_split = split_file(args.aa_input,
+                                   output_dir=tmpdirname + '/split_file',is_dna=False)
             hit_table = []
             gene_table = []
             print('Starting GMGC queries (total: {} batches to process)'.format(num_split))
@@ -283,11 +278,11 @@ def main(args=None):
                 besthit = query_gmgc(tmpdirname+'/split_file/split_{}.faa'.format(index+1))
                 if besthit is not None:
                     besthit = json.loads(bytes.decode(besthit.content))['results']
+                    nt_split = None
                     if args.nt_input is not None:
-                        hit_table_index,gene_inf = realignment(tmpdirname+'/split_file/split_{}.fna'.format(index+1),
-                                                      tmpdirname+'/split_file/split_{}.faa'.format(index+1),besthit)
-                    else:
-                        hit_table_index,gene_inf = realignment(None,tmpdirname+'/split_file/split_{}.faa'.format(index+1),besthit)
+                        nt_split = tmpdirname+'/split_file/split_{}.fna'.format(index+1)
+                    aa_split = tmpdirname+'/split_file/split_{}.faa'.format(index+1),
+                    hit_table_index, gene_inf = realignment(nt_split, aa_split, besthit)
                     hit_table.extend(hit_table_index)
                     gene_table.extend(gene_inf)
             hit_table = pd.DataFrame(hit_table)
