@@ -8,7 +8,7 @@ from tqdm import tqdm
 import subprocess
 from os import path
 import tempfile
-from pkg_resources import resource_string
+from importlib.resources import files
 import datetime
 import time
 import yaml
@@ -351,9 +351,9 @@ def main(args=None):
                     ofile.write(s+'\n')
 
 
-            output_content = resource_string(__name__, 'output.md')
+            output_content = files(__package__).joinpath('output.md').read_text()
             with atomic_write(out+'/README.md', overwrite=True) as ofile:
-                    ofile.write(bytes.decode(output_content))
+                    ofile.write(output_content)
 
             end = datetime.datetime.now()
 
